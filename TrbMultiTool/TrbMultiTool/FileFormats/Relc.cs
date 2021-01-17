@@ -3,8 +3,8 @@ using System.IO;
 
 namespace TrbMultiTool.FileFormats
 {
-    public class Relc : Tag
-    {
+	public class Relc : Tag
+	{
 		public uint Count { get; set; }
 
 		public struct OffsetInfo
@@ -13,7 +13,7 @@ namespace TrbMultiTool.FileFormats
 			public ushort HdrxIndex2 { get; set; }
 			public uint Offset { get; set; }
 		};
-        public List<OffsetInfo> StructInfos { get; set; } = new();
+		public List<OffsetInfo> StructInfos { get; set; } = new();
 
 		public Relc() : base()
 		{

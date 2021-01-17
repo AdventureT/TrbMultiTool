@@ -8,17 +8,17 @@ using TrbMultiTool.FileFormats;
 
 namespace TrbMultiTool
 {
-    public class Trb
-    {
-        public static BinaryReader _f;
-        private string _fileName;
+	public class Trb
+	{
+		public static BinaryReader _f;
+		private string _fileName;
 
-        public Trb(string fileName)
-        {
-            _fileName = fileName;
-            _f = new BinaryReader(File.Open(fileName, FileMode.Open, FileAccess.Read));
-            var tsfl = new Tsfl();
-            _f.Close();
-        }
-    }
+		public Trb(string fileName)
+		{
+			_fileName = fileName;
+			_f = new BinaryReader(File.Open(fileName, FileMode.Open, FileAccess.Read));
+			var tsfl = new Tsfl();
+			_f.Close();
+		}
+	}
 }

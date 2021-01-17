@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace TrbMultiTool.FileFormats
 {
-    public class Tag
-    {
-        public string Label { get; set; }
-        public uint Size { get; set; }
+	public class Tag
+	{
+		public string Label { get; set; }
+		public uint Size { get; set; }
 
-        public Tag()
-        {
-            Label = new string(Trb._f.ReadChars(4));
-            Size = Trb._f.ReadUInt32();
-        }
-    }
+		public Tag()
+		{
+			Label = new string(Trb._f.ReadChars(4));
+			Size = Trb._f.ReadUInt32();
+		}
+	}
 }

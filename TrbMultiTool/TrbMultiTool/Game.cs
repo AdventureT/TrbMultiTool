@@ -6,22 +6,22 @@ using System.Threading.Tasks;
 
 namespace TrbMultiTool
 {
-    enum Game
-    {
-        Barnyard,
-        NicktoonsUnite,
-        NicktoonsBattleForVolcanoIsland,
-        NicktoonsAttackOfTheToybots,
-        ElTigre,
-        MarvelSuperHeroSquad,
-        DeBlob
-    }
-    
+	enum Game
+	{
+		Barnyard,
+		NicktoonsUnite,
+		NicktoonsBattleForVolcanoIsland,
+		NicktoonsAttackOfTheToybots,
+		ElTigre,
+		MarvelSuperHeroSquad,
+		DeBlob
+	}
+	
 
-    enum Plattform
-    {
-        PS2,
-        GameCube,
-        PC
-    }
+	enum Plattform
+	{
+		PS2,
+		GameCube,
+		PC
+	}
 }

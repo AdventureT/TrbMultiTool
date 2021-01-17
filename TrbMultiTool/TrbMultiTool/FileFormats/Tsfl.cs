@@ -9,8 +9,8 @@ namespace TrbMultiTool.FileFormats
 {
 	class Tsfl : Tag
 	{
-        public string Trbf { get; set; }
-        public Hdrx Hdrx { get; set; }
+		public string Trbf { get; set; }
+		public Hdrx Hdrx { get; set; }
 		public Sect Sect { get; set; }
 		public Relc Relc { get; set; }
 		public Symb Symb { get; set; }
