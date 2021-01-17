@@ -2,8 +2,22 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\barnyard.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspose.3D" Version="21.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\barnyard.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
 
 </Project>

@@ -7,6 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <ComboBox HorizontalAlignment="Left" Margin="554,128,0,0" VerticalAlignment="Top" Width="120" x:Name="ChooseGameComboBox" SelectionChanged="ChooseGameComboBox_SelectionChanged"/>
+        <Button Content="Choose Trb file" HorizontalAlignment="Left" Margin="554,281,0,0" VerticalAlignment="Top" Width="104" x:Name="ChooseFileButton" Click="ChooseFileButton_Click"/>
+        <Image HorizontalAlignment="Left" Height="231" Margin="39,104,0,0" VerticalAlignment="Top" Width="449" x:Name="ImageBox" Stretch="Uniform"/>
     </Grid>
 </Window>
