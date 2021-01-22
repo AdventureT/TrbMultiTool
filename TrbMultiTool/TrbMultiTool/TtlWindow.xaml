@@ -7,13 +7,9 @@
         mc:Ignorable="d"
         Title="TtlWindow" Height="647" Width="1314">
     <Grid>
-        <ListView Margin="0,0,1129,0" x:Name="listView" SelectionChanged="listView_SelectionChanged">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn/>
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <TreeView Margin="0,0,1129,0" x:Name="treeView" SelectedItemChanged="treeView_SelectedItemChanged">
+            
+        </TreeView>
         <Image HorizontalAlignment="Left" Height="548" Margin="228,36,0,0" VerticalAlignment="Top" Width="1057" x:Name="img"/>
 
     </Grid>

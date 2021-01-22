@@ -22,6 +22,7 @@ namespace TrbMultiTool
 			Tsfl = new Tsfl();
             var hdrx = Tsfl.Sect.Offset;
             var previousHdrxIndex = 0;
+            var TTLWindow = new TtlWindow();
             foreach (var nameEntry in Tsfl.Symb.NameEntries)
             {
                 if (previousHdrxIndex != nameEntry.ID)
@@ -38,7 +39,8 @@ namespace TrbMultiTool
                 switch (name)
                 {
                     case "TTL":
-                        var Ttl = new Ttl(nameEntry.DataOffset + (uint)hdrx);
+                        var Ttl = new Ttl(nameEntry.DataOffset + (uint)hdrx, nameEntry.Name);
+                        TTLWindow.AddTtl(Ttl);
                         break;
                     default:
                         break;
@@ -53,7 +55,8 @@ namespace TrbMultiTool
                 //           }
 
             }
-			_f.Close();
+            TTLWindow.Show();
+            _f.Close();
 		}
 	}
 }

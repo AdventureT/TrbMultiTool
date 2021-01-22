@@ -20,32 +20,60 @@ namespace TrbMultiTool
     /// </summary>
     public partial class TtlWindow : Window
     {
-        public Ttl Ttl { get; set; }
+        public List<Ttl> Ttls { get; set; } = new();
+
+        public List<TreeViewItem> Lvis { get; set; } = new();
+
         public TtlWindow(Ttl ttl)
         {
             InitializeComponent();
-            Ttl = ttl;
+            AddTtl(ttl);
+        }
+
+        public TtlWindow()
+        {
+            InitializeComponent();
+        }
+
+        public void AddTtl(Ttl ttl)
+        {
+            Ttls.Add(ttl);
             ReadTtl();
         }
 
         private void ReadTtl()
         {
-            foreach (var textureInfo in Ttl.TextureInfos)
+            var lvi = new TreeViewItem();
+            lvi.Header = Ttls.Last().TtlName;
+            foreach (var textureInfo in Ttls.Last().TextureInfos)
             {
-                listView.Items.Add(textureInfo.FileName);
+                lvi.Items.Add(textureInfo.FileName);
             }
+            Lvis.Add(lvi);
+            treeView.Items.Add(lvi);
         }
 
-        private void LoadTtl(int index)
+        private void LoadTtl(string ttlName)
         {
-            img.Source = Ttl.LoadBitmap(Ttl.TextureInfos[index].Dds.BitmapImage);
-            img.Width = Ttl.TextureInfos[index].Dds.BitmapImage.Width;
-            img.Height = Ttl.TextureInfos[index].Dds.BitmapImage.Height;
+            var lvi = Lvis.Where(x => x.Items.Contains(ttlName)).First();
+            var ttl = Ttls.Where(x => x.TtlName == (string)lvi.Header).First();
+            var texInfos = ttl.TextureInfos;
+            var dds = texInfos.Where(x => x.FileName.Contains(ttlName)).First();
+            img.Source = Ttl.LoadBitmap(dds.Dds.BitmapImage);
+            img.Width = dds.Dds.BitmapImage.Width;
+            img.Height = dds.Dds.BitmapImage.Height;
         }
 
         private void listView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            LoadTtl(listView.SelectedIndex);
+            
+        }
+
+        private void treeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            var sI = treeView.SelectedItem;
+            if (sI is TreeViewItem) return;
+            LoadTtl((string)treeView.SelectedItem);
         }
     }
 }

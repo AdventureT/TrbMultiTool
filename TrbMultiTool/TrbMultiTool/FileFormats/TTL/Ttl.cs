@@ -12,7 +12,7 @@ namespace TrbMultiTool.FileFormats
 {
     public class Ttl
     {
-
+        public string TtlName { get; set; }
         public uint Offset { get; set; }
 
         public uint TextureInfoCount { get; set; }
@@ -40,8 +40,9 @@ namespace TrbMultiTool.FileFormats
             return bs;
         }
 
-        public Ttl(uint offset)
+        public Ttl(uint offset, string ttlName)
         {
+            TtlName = ttlName;
             Offset = offset;
             Trb._f.BaseStream.Seek(Offset, System.IO.SeekOrigin.Begin);
             TextureInfoCount = Trb._f.ReadUInt32();
@@ -53,8 +54,8 @@ namespace TrbMultiTool.FileFormats
             }
             Trb._f.BaseStream.Seek(pos + 4, System.IO.SeekOrigin.Begin);
             TtlType = ReadHelper.ReadStringFromOffset(Offset + Trb._f.ReadUInt32());
-            var TTLWindow = new TtlWindow(this);
-            TTLWindow.Show();
+            //var TTLWindow = new TtlWindow(this);
+            //TTLWindow.Show();
         }
     }
 }
