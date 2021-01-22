@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TrbMultiTool.FileFormats
 {
-	class Tsfl : Tag
+	public class Tsfl : Tag
 	{
 		public string Trbf { get; set; }
 		public Hdrx Hdrx { get; set; }

@@ -51,9 +51,9 @@ namespace TrbMultiTool
 		{
 			var openFileDialog = new OpenFileDialog
 			{
-				Filter = "TRB Files|*.trb",
-				DefaultExt = ".trb",
-				Title = "Select a trb file"
+				Filter = "TRB Files (*.trb)|*.trb|TTL files (*.ttl)|*.ttl",
+				DefaultExt = ".trb|.ttl",
+				Title = "Select a trb/ttl file"
 			};
 			if ((bool)openFileDialog.ShowDialog())
 			{
