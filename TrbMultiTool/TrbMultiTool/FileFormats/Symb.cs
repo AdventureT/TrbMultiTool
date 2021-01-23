@@ -27,6 +27,20 @@ namespace TrbMultiTool.FileFormats
 			{
 				NameEntries.Add(new NameEntry() { ID = Trb._f.ReadInt16(), Name = ReadHelper.ReadStringFromOffset(Trb._f.ReadUInt32() + nameEntryOffset), NameID = Trb._f.ReadUInt16(), DataOffset = Trb._f.ReadUInt32() });
 			}
+
+			var hash = SymbolTypeHash(NameEntries[0].Name);
+		}
+
+		public static ulong SymbolTypeHash(string typeName)
+		{
+			var hash = (ulong)0;
+			for (var i = 0; i < typeName.Length; ++i)
+			{
+				var byteIndex = (ulong)(sbyte)typeName[i];
+				hash = ((hash << 5) & 0x1FFFE0) - hash + byteIndex;
+				hash &= 0xFFFF;
+			}
+			return hash;
 		}
 	}
 }
