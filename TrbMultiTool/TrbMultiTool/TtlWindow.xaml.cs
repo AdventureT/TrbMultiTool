@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using TrbMultiTool.FileFormats;
+using TrbMultiTool.FileFormats.TTL;
 
 namespace TrbMultiTool
 {
@@ -47,12 +48,14 @@ namespace TrbMultiTool
             {
                 Header = Ttls.Last().TtlName
             };
+            lvi.Tag = Ttls.Last();
             foreach (var textureInfo in Ttls.Last().TextureInfos)
             {
                 var lvi2 = new TreeViewItem
                 {
                     Header = textureInfo.FileName
                 };
+                lvi2.Tag = textureInfo;
                 lvi.Items.Add(lvi2);
             }
             treeView.Items.Add(lvi);
@@ -60,13 +63,10 @@ namespace TrbMultiTool
 
         private void LoadTtl(TreeViewItem tvi)
         {
-            var tviParent = (TreeViewItem)tvi.Parent;
-            var ttl = Ttls.Where(x => x.TtlName == (string)tviParent.Header).First();
-            var texInfos = ttl.TextureInfos;
-            var dds = texInfos.Where(x => x.FileName.Contains((string)tvi.Header)).First();
-            img.Source = Ttl.LoadBitmap(dds.Dds.BitmapImage);
-            img.Width = dds.Dds.BitmapImage.Width;
-            img.Height = dds.Dds.BitmapImage.Height;
+            var dds = ((TextureInfo)tvi.Tag).Dds;
+            img.Source = Ttl.LoadBitmap(dds.BitmapImage);
+            img.Width = dds.BitmapImage.Width;
+            img.Height = dds.BitmapImage.Height;
         }
 
         private void listView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -77,7 +77,7 @@ namespace TrbMultiTool
         private void treeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             var sI = (TreeViewItem)treeView.SelectedItem;
-            if (sI.Parent == null) return;
+            if (sI.Tag is Ttl) return;
             LoadTtl(sI);
         }
     }
