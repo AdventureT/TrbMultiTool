@@ -8,9 +8,10 @@
         Title="TtlWindow" Height="647" Width="1314">
     <Grid>
         <TreeView Margin="0,0,1129,0" x:Name="treeView" SelectedItemChanged="treeView_SelectedItemChanged">
-            
+
         </TreeView>
         <Image HorizontalAlignment="Left" Height="548" Margin="228,36,0,0" VerticalAlignment="Top" Width="1057" x:Name="img"/>
+        <Button Content="Extract" HorizontalAlignment="Left" Margin="1200,588,0,0" VerticalAlignment="Top" Height="33" Width="88" Click="Button_Click"/>
 
     </Grid>
 </Window>
