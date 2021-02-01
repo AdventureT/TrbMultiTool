@@ -88,35 +88,31 @@ namespace TrbMultiTool
             var sI = (TreeViewItem)treeView.SelectedItem;
             if (sI.Tag is Ttl) return; //TODO extract whole TTL
 
-            using (var fbd = new FolderBrowserDialog())
+            using var fbd = new FolderBrowserDialog();
+            DialogResult result = fbd.ShowDialog();
+
+            if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
             {
-                DialogResult result = fbd.ShowDialog();
-
-                if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                var wholeName = ((TextureInfo)sI.Tag).FileName.Split('\\');
+                var dirName = "";
+                var fileName = "";
+                if (wholeName.Length > 1) // Create Directory
                 {
-                    var wholeName = ((TextureInfo)sI.Tag).FileName.Split('\\');
-                    var dirName = "";
-                    var fileName = "";
-                    if (wholeName.Length > 1) // Create Directory
+                    dirName = wholeName.First();
+                    if (!Directory.Exists(fbd.SelectedPath + "\\" + dirName))
                     {
-                        dirName = wholeName.First();
-                        if (!Directory.Exists(fbd.SelectedPath + "\\" + dirName))
-                        {
-                            Directory.CreateDirectory(fbd.SelectedPath + "\\" + dirName);
-                        }
-                        fileName = wholeName[1].Remove(wholeName[1].Length - 4) + ".dds";
+                        Directory.CreateDirectory(fbd.SelectedPath + "\\" + dirName);
                     }
-                    else // No Directory
-                    {
-                        fileName = wholeName.First().Remove(wholeName.First().Length - 4) + ".dds";
-                    }
-
-                    // Write the dds file
-                    using (BinaryWriter writer = new BinaryWriter(File.Open($"{fbd.SelectedPath}\\{dirName}\\{fileName}", FileMode.Create)))
-                    {
-                        writer.Write(((TextureInfo)sI.Tag).RawImage);
-                    }
+                    fileName = wholeName[1].Remove(wholeName[1].Length - 4) + ".dds";
                 }
+                else // No Directory
+                {
+                    fileName = wholeName.First().Remove(wholeName.First().Length - 4) + ".dds";
+                }
+
+                // Write the dds file
+                using BinaryWriter writer = new BinaryWriter(File.Open($"{fbd.SelectedPath}\\{dirName}\\{fileName}", FileMode.Create));
+                writer.Write(((TextureInfo)sI.Tag).RawImage);
             }
         }
     }

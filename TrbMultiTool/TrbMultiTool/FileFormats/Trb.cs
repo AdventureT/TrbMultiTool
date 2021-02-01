@@ -23,8 +23,9 @@ namespace TrbMultiTool
             var hdrx = Tsfl.Sect.Offset;
             var previousHdrxIndex = 0;
             var TTLWindow = new TtlWindow();
-            foreach (var nameEntry in Tsfl.Symb.NameEntries)
+            for (int i = 0; i < Tsfl.Symb.NameEntries.Count; i++)
             {
+                var nameEntry = Tsfl.Symb.NameEntries[i];
                 if (previousHdrxIndex != nameEntry.ID)
                 {
                     hdrx += Tsfl.Hdrx.TagInfos[previousHdrxIndex].TagSize;
@@ -42,20 +43,14 @@ namespace TrbMultiTool
                         var Ttl = new Ttl(nameEntry.DataOffset + (uint)hdrx, nameEntry.Name);
                         TTLWindow.AddTtl(Ttl);
                         break;
+                    case "FileHeader":
+                        var Tmdl = new Tmdl(Tsfl.Symb.NameEntries, i, hdrx);
+                        break;
                     default:
                         break;
                 }
-                //           switch (nameEntry.NameID) // Good idea, but hash hasn't been discovered yet :(
-                //           {
-                //case 17868:
-                //	var Ttl = new Ttl(nameEntry.DataOffset);
-                //	break;
-                //               default:
-                //                   break;
-                //           }
-
             }
-            TTLWindow.Show();
+            if (TTLWindow.Ttls.Any()) TTLWindow.ShowDialog();
             _f.Close();
 		}
 	}
