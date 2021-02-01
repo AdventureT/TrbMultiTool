@@ -30,9 +30,10 @@ namespace TrbMultiTool.FileFormats
             //if (splittedNameEntry[1] != "Mesh") throw new Exception("No meshes?");
             //tmdlWindow.myViewport.Children.Clear();
             //CreateMesh(hdrx, meshEntry);
-
+            tmdlWindow.modelName.Content = $"Opened Model: {Trb._safeFileName}";
             var copy = nameEntry;
             copy.RemoveRange(0, index);
+            tmdlWindow.myViewport.Children.Clear();
 
             var meshEntries = copy.FindAll(x => x.Name.Contains("LOD0"));
             foreach (var item in meshEntries)
@@ -44,10 +45,11 @@ namespace TrbMultiTool.FileFormats
 
                 CreateMesh(hdrx, meshEntry);
             }
-            tmdlWindow.ShowDialog();
+
+            tmdlWindow.Show();
         }
 
-        private static void CreateMesh(long hdrx, Symb.NameEntry meshEntry)
+        private static ModelVisual3D CreateMesh(long hdrx, Symb.NameEntry meshEntry)
         {
             Trb._f.BaseStream.Seek(meshEntry.DataOffset + (uint)hdrx, System.IO.SeekOrigin.Begin);
             uint lod_meshInfoCount = Trb._f.ReadUInt32(); //??
@@ -57,13 +59,13 @@ namespace TrbMultiTool.FileFormats
             uint lodSubMeshInfoOffset = Trb._f.ReadUInt32();
             Trb._f.BaseStream.Seek((uint)hdrx + lodSubMeshInfoOffset, System.IO.SeekOrigin.Begin);
             var meshInfos = new List<LOD_MeshInfo>();
+
             for (int i = 0; i < lod_meshInfoCount; i++)
             {
                 meshInfos.Add(new LOD_MeshInfo(Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(),
                     Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(),
                     Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle()));
             }
-
 
             var modelGroup = new Model3DGroup();
             for (int i = 0; i < lod_meshInfoCount; i++)
@@ -115,13 +117,13 @@ namespace TrbMultiTool.FileFormats
                         faceB = faceC;
                     }
                 } while ((uint)Trb._f.BaseStream.Position < (meshInfos[i].faceCount * 2 + meshInfos[i].faceOffset + (uint)hdrx));
+
                 gm.Geometry = mesh;
                 var diffuse = new DiffuseMaterial
                 {
                     Brush = new SolidColorBrush(Color.FromRgb(166, 166, 166))
                 };
                 gm.Material = diffuse;
-
 
                 modelGroup.Children.Add(gm);
             }
@@ -142,6 +144,8 @@ namespace TrbMultiTool.FileFormats
                 Content = modelGroup
             };
             tmdlWindow.myViewport.Children.Add(modelVisual);
+
+            return modelVisual;
         }
     }
 }

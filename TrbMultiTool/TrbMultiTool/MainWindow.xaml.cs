@@ -39,6 +39,7 @@ namespace TrbMultiTool
 			ChooseGameComboBox.Items.Add(Game.ElTigre);
 			ChooseGameComboBox.Items.Add(Game.MarvelSuperHeroSquad);
 			ChooseGameComboBox.Items.Add(Game.DeBlob);
+			ChooseGameComboBox.SelectedIndex = 0;
 		}
 
 		private void ChooseGameComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -55,10 +56,16 @@ namespace TrbMultiTool
 				DefaultExt = ".trb|.ttl",
 				Title = "Select a trb/ttl file"
 			};
+
 			if ((bool)openFileDialog.ShowDialog())
 			{
-				var trb = new Trb(openFileDialog.FileName);
+				new Trb(openFileDialog.FileName);
 			}
 		}
-	}
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+			Environment.Exit(0);
+        }
+    }
 }

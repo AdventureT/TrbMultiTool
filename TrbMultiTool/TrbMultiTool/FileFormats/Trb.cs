@@ -10,15 +10,16 @@ namespace TrbMultiTool
 {
 	public class Trb
 	{
+        public static string _safeFileName;
         public static BinaryReader _f;
 		private string _fileName;
-
         public static Tsfl Tsfl { get; set; }
 
         public Trb(string fileName)
 		{
 			_fileName = fileName;
-			_f = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
+            _safeFileName = fileName.Split("\\").Last();
+            _f = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
 			Tsfl = new Tsfl();
             var hdrx = Tsfl.Sect.Offset;
             var previousHdrxIndex = 0;
