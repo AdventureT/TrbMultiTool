@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TrbMultiTool"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
     <Grid>
         <ComboBox HorizontalAlignment="Left" Margin="554,128,0,0" VerticalAlignment="Top" Width="120" x:Name="ChooseGameComboBox" SelectionChanged="ChooseGameComboBox_SelectionChanged"/>
         <Button Content="Choose Trb file" HorizontalAlignment="Left" Margin="554,281,0,0" VerticalAlignment="Top" Width="104" x:Name="ChooseFileButton" Click="ChooseFileButton_Click"/>
