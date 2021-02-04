@@ -1,0 +1,17 @@
+﻿<Window x:Class="TrbMultiTool.QuestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TrbMultiTool"
+        mc:Ignorable="d"
+        Title="QuestWindow" Height="450" Width="800">
+    <Grid>
+        <TreeView x:Name="treeView" Margin="0,0,426,0" SelectedItemChanged="treeView_SelectedItemChanged"/>
+        <TextBox HorizontalAlignment="Left" Margin="500,117,0,0" Text="Value" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" x:Name="textBox" TextChanged="textBox_TextChanged"/>
+        <Label Content="Type" HorizontalAlignment="Left" Margin="436,111,0,0" VerticalAlignment="Top" Height="30" Width="41" x:Name="label"/>
+        <Button Content="Apply to file" HorizontalAlignment="Left" Margin="552,140,0,0" VerticalAlignment="Top" Click="Button_Click" x:Name="applyButton"/>
+
+
+    </Grid>
+</Window>

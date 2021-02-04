@@ -14,7 +14,7 @@ namespace TrbMultiTool.FileFormats
         record FileHeader(string signature, uint u, uint u2, uint u3); //TODO
         record SkeletonHeader(string fileName); //TODO
         record Skeleton(uint boneCount); //TODO
-        record Materials(uint uk); //TODO
+        record Materials(uint uk, uint uk2, uint uk3, uint size); //TODO
         record Collision(uint uk); //TODO
         record Header(uint uk); //TODO 36 Bytes
 
@@ -56,6 +56,9 @@ namespace TrbMultiTool.FileFormats
             uint faceCount = Trb._f.ReadUInt32();
             uint vertexCount = Trb._f.ReadUInt32();
             string meshName = ReadHelper.ReadStringFromOffset(Trb._f.ReadUInt32() + (uint)hdrx);
+            tmdlWindow.meshName.Content += $"{meshName}, ";
+            tmdlWindow.vertices.Content += $"{vertexCount}, ";
+            tmdlWindow.faces.Content += $"{faceCount}, ";
             uint lodSubMeshInfoOffset = Trb._f.ReadUInt32();
             Trb._f.BaseStream.Seek((uint)hdrx + lodSubMeshInfoOffset, System.IO.SeekOrigin.Begin);
             var meshInfos = new List<LOD_MeshInfo>();
