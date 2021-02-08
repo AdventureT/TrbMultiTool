@@ -7,7 +7,7 @@ using System.Windows.Controls;
 
 namespace TrbMultiTool.FileFormats
 {
-    class Quest
+    public class Quest
     {
         public int Zero { get; set; }
         public uint Offset { get; set; }
@@ -33,20 +33,23 @@ namespace TrbMultiTool.FileFormats
 
         public record TypeContent(Type Type, string Value, long Offset, long PointerPos = 0);
 
+        public List<TypeContent> TypeContents { get; set; } = new();
+
         public QuestWindow QuestWindow { get; set; } = new();
 
         public Quest()
         {
-            Zero = Trb._f.ReadInt32();
-            Offset = Trb._f.ReadUInt32();
-            Count = Trb._f.ReadUInt32();
-            Trb._f.BaseStream.Seek(Offset + Trb.Tsfl.Sect.Offset, System.IO.SeekOrigin.Begin);
+            Zero = Trb.SectFile.ReadInt32();
+            Offset = Trb.SectFile.ReadUInt32();
+            Count = Trb.SectFile.ReadUInt32();
+            Trb.SectFile.BaseStream.Seek(Offset, System.IO.SeekOrigin.Begin);
             var tvi = new TreeViewItem
             {
                 Header = "Quests"
             };
             Item(Count, tvi);
             QuestWindow.treeView.Items.Add(tvi);
+            QuestWindow.TypeContentss = TypeContents;
             QuestWindow.Show();
         }
 
@@ -55,66 +58,67 @@ namespace TrbMultiTool.FileFormats
             var infos = new List<Info>();
             for (int i = 0; i < count; i++)
             {
-                infos.Add(new Info(Trb._f.ReadUInt32(), Trb._f.ReadUInt32()));
+                infos.Add(new Info(Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32()));
             }
             foreach (var info in infos)
             {
-                Trb._f.BaseStream.Seek(info.Offset1 + Trb.Tsfl.Sect.Offset, System.IO.SeekOrigin.Begin);
-                string name = ReadHelper.ReadStringFromOffset(Trb._f.ReadUInt32() + (uint)Trb.Tsfl.Sect.Offset); // Usually "quest"
+                Trb.SectFile.BaseStream.Seek(info.Offset1, System.IO.SeekOrigin.Begin);
+                string name = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32());
 
                 var tvi = new TreeViewItem
                 {
                     Header = name
                 };
 
-                Trb._f.BaseStream.Seek(info.Offset2 + Trb.Tsfl.Sect.Offset, System.IO.SeekOrigin.Begin);
-                var subInfo = new SubInfo((Type)Trb._f.ReadUInt32(), 0);
+                Trb.SectFile.BaseStream.Seek(info.Offset2, System.IO.SeekOrigin.Begin);
+                var subInfo = new SubInfo((Type)Trb.SectFile.ReadUInt32(), 0);
 
                 uint textOffset = 0;
-                if (subInfo.Type == Type.String) textOffset = Trb._f.ReadUInt32() + (uint)Trb.Tsfl.Sect.Offset;
+                if (subInfo.Type == Type.String) textOffset = Trb.SectFile.ReadUInt32();
                 tvi.Tag = subInfo.Type switch
                 {
                     //Number?
-                    Type.Int => new TypeContent(Type.Int, Trb._f.ReadInt32().ToString(), Trb._f.BaseStream.Position - 4),
+                    Type.Int => new TypeContent(Type.Int, Trb.SectFile.ReadInt32().ToString(), Trb.SectFile.BaseStream.Position - 4),
                     //float
-                    Type.Float => new TypeContent(Type.Float, $"{Trb._f.ReadSingle().ToString():N2}", Trb._f.BaseStream.Position - 4),
+                    Type.Float => new TypeContent(Type.Float, $"{Trb.SectFile.ReadSingle().ToString():N2}", Trb.SectFile.BaseStream.Position - 4),
                     //bool
-                    Type.Bool => new TypeContent(Type.Bool, (Trb._f.ReadUInt32() == 1).ToString(), Trb._f.BaseStream.Position - 4),
+                    Type.Bool => new TypeContent(Type.Bool, (Trb.SectFile.ReadUInt32() == 1).ToString(), Trb.SectFile.BaseStream.Position - 4),
                     //Another array? Pointing to the same info?
                     Type.SubItem => SubItem(tvi),
                     //Player
                     Type.Player => Player(ref tvi),
                     //string
-                    Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(textOffset), textOffset, Trb._f.BaseStream.Position - 4),
+                    Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(Trb.SectFile, textOffset), textOffset, Trb.SectFile.BaseStream.Position - 4),
                     //Uint
-                    Type.UInt => new TypeContent(Type.UInt, Trb._f.ReadUInt32().ToString(), Trb._f.BaseStream.Position - 4),
+                    Type.UInt => new TypeContent(Type.UInt, Trb.SectFile.ReadUInt32().ToString(), Trb.SectFile.BaseStream.Position - 4),
                     _ => throw new NotImplementedException($"Type {subInfo.Type} hasn't been implemented yet"),
                 };
+                TypeContents.Add((TypeContent)tvi.Tag);
                 prev.Items.Add(tvi);
             }
         }
 
         private TypeContent SubItem(TreeViewItem prev)
         {
-            Trb._f.BaseStream.Seek(Trb._f.ReadUInt32() + Trb.Tsfl.Sect.Offset, System.IO.SeekOrigin.Begin);
-            var subsubInfo2 = new SubSubInfo(Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32());
+            Trb.SectFile.BaseStream.Seek(Trb.SectFile.ReadUInt32(), System.IO.SeekOrigin.Begin);
+            var subsubInfo2 = new SubSubInfo(Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32());
             //Parent?? It's always 0
             //Trb._f.BaseStream.Seek(subsubInfo2.Offset1 + Trb.Tsfl.Sect.Offset, System.IO.SeekOrigin.Begin);
             //var subsubInfo3 = new SubSubInfo(Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32());
-            Trb._f.BaseStream.Seek(subsubInfo2.Offset2 + Trb.Tsfl.Sect.Offset, System.IO.SeekOrigin.Begin);
+            Trb.SectFile.BaseStream.Seek(subsubInfo2.Offset2, System.IO.SeekOrigin.Begin);
             Item(subsubInfo2.Offset2Count, prev);
             return new TypeContent(Type.String, "SubInfo", 0);
         }
 
-        private static TypeContent Player(ref TreeViewItem prev)
+        private TypeContent Player(ref TreeViewItem prev)
         {
-            Trb._f.BaseStream.Seek(Trb._f.ReadUInt32() + Trb.Tsfl.Sect.Offset, System.IO.SeekOrigin.Begin);
-            var playerInfo = new PlayerInfo(Trb._f.ReadUInt32(), Trb._f.ReadUInt32());
-            Trb._f.BaseStream.Seek(playerInfo.SubInfoOffset + Trb.Tsfl.Sect.Offset, System.IO.SeekOrigin.Begin);
+            Trb.SectFile.BaseStream.Seek(Trb.SectFile.ReadUInt32(), System.IO.SeekOrigin.Begin);
+            var playerInfo = new PlayerInfo(Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32());
+            Trb.SectFile.BaseStream.Seek(playerInfo.SubInfoOffset, System.IO.SeekOrigin.Begin);
             var playerSubInfos = new List<SubInfo>();
             for (int i = 0; i < playerInfo.SubInfoOffsetCount; i++)
             {
-                playerSubInfos.Add(new SubInfo((Type)Trb._f.ReadUInt32(), Trb._f.ReadUInt32()));
+                playerSubInfos.Add(new SubInfo((Type)Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32()));
             }
             foreach (var playerSubInfo in playerSubInfos)
             {
@@ -123,16 +127,17 @@ namespace TrbMultiTool.FileFormats
                     Header = playerSubInfo.Type switch
                     {
                         //string
-                        Type.String => ReadHelper.ReadStringFromOffset(playerSubInfo.Value + (uint)Trb.Tsfl.Sect.Offset),
+                        Type.String => ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value),
                         _ => throw new NotImplementedException($"Type {playerSubInfo.Type} hasn't been implemented yet"),
                     },
                     Tag = playerSubInfo.Type switch
                     {
                         //string
-                        Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(playerSubInfo.Value + (uint)Trb.Tsfl.Sect.Offset), playerSubInfo.Value + (uint)Trb.Tsfl.Sect.Offset, Trb._f.BaseStream.Position - 4),
+                        Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value), playerSubInfo.Value, Trb.SectFile.BaseStream.Position - 4),
                         _ => throw new NotImplementedException($"Type {playerSubInfo.Type} hasn't been implemented yet"),
                     }
                 };
+                TypeContents.Add((TypeContent)tvi.Tag);
                 prev.Items.Add(tvi);
             }
             return new TypeContent(Type.String, "Players", 0);

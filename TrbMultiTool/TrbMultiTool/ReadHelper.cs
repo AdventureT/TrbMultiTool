@@ -11,25 +11,25 @@ namespace TrbMultiTool
     class ReadHelper
     {
         public static long _lastPos = -1;
-        public static string ReadString()
+        public static string ReadString(BinaryReader f)
         {
             var sb = new StringBuilder();
             while (true)
             {
-                var newByte = Trb._f.ReadByte();
+                var newByte = f.ReadByte();
                 if (newByte == 0) break;
                 sb.Append((char)newByte);
             }
             return sb.ToString();
         }
 
-        public static string ReadUnicodeString()
+        public static string ReadUnicodeString(BinaryReader f)
         {
             var sb = new StringBuilder();
             while (true)
             {
-                var newByte = Trb._f.ReadByte();
-                var newByte2 = Trb._f.ReadByte();
+                var newByte = f.ReadByte();
+                var newByte2 = f.ReadByte();
                 if (newByte == 0 && newByte2 == 0) break;
                 var convertedChar = Encoding.Unicode.GetString(new byte[] { newByte, newByte2 });
                 sb.Append(convertedChar);
@@ -37,11 +37,11 @@ namespace TrbMultiTool
             return sb.ToString();
         }
 
-        public static string ReadStringFromOffset(uint offset)
+        public static string ReadStringFromOffset(BinaryReader f, uint offset)
         {
-            var pos = Trb._f.BaseStream.Position;
-            Trb._f.BaseStream.Seek(offset, SeekOrigin.Begin);
-            string str = ReadString();
+            var pos = f.BaseStream.Position;
+            f.BaseStream.Seek(offset, SeekOrigin.Begin);
+            string str = ReadString(f);
             //var intCheck = Trb._f.ReadInt16();
             //if (intCheck <= 0xFF)
             //{
@@ -54,50 +54,50 @@ namespace TrbMultiTool
             //    str = ReadString();
             //}
 
-            Trb._f.BaseStream.Seek(pos, SeekOrigin.Begin);
+            f.BaseStream.Seek(pos, SeekOrigin.Begin);
             return str;
         }
 
-        public static byte[] ReadFromOffset(uint bytesToRead, uint offset)
+        public static byte[] ReadFromOffset(BinaryReader f, uint bytesToRead, uint offset)
         {
-            var pos = Trb._f.BaseStream.Position;
-            Trb._f.BaseStream.Seek(offset, SeekOrigin.Begin);
+            var pos = f.BaseStream.Position;
+            f.BaseStream.Seek(offset, SeekOrigin.Begin);
             var buffer = new byte[bytesToRead];
-            var bytesRead = Trb._f.Read(buffer);
-            Trb._f.BaseStream.Seek(pos, SeekOrigin.Begin);
+            var bytesRead = f.Read(buffer);
+            f.BaseStream.Seek(pos, SeekOrigin.Begin);
             return buffer;
         }
 
-        public static long SeekToOffset(uint offset)
+        public static long SeekToOffset(BinaryReader f, uint offset)
         {
-            _lastPos = Trb._f.BaseStream.Position;
-            Trb._f.BaseStream.Seek(offset, SeekOrigin.Begin);
+            _lastPos = f.BaseStream.Position;
+            f.BaseStream.Seek(offset, SeekOrigin.Begin);
             return _lastPos;
         }
 
-        public static void ReturnToOrginalPosition()
+        public static void ReturnToOrginalPosition(BinaryReader f)
         {
-            if (_lastPos != -1) Trb._f.BaseStream.Seek(_lastPos, SeekOrigin.Begin);
+            if (_lastPos != -1) f.BaseStream.Seek(_lastPos, SeekOrigin.Begin);
         }
 
-        public static Vector4 ReadVector4() => new Vector4(Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle());
-        public static Vector3 ReadVector3() => new Vector3(Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle());
+        public static Vector4 ReadVector4(BinaryReader f) => new Vector4(f.ReadSingle(), f.ReadSingle(), f.ReadSingle(), f.ReadSingle());
+        public static Vector3 ReadVector3(BinaryReader f) => new Vector3(f.ReadSingle(), f.ReadSingle(), f.ReadSingle());
 
-        public static Vector4 ReadVector4FromOffset(uint offset)
+        public static Vector4 ReadVector4FromOffset(BinaryReader f, uint offset)
         {
-            var pos = Trb._f.BaseStream.Position;
-            Trb._f.BaseStream.Seek(offset, SeekOrigin.Begin);
-            var result = ReadVector4();
-            Trb._f.BaseStream.Seek(pos, SeekOrigin.Begin);
+            var pos = f.BaseStream.Position;
+            f.BaseStream.Seek(offset, SeekOrigin.Begin);
+            var result = ReadVector4(f);
+            f.BaseStream.Seek(pos, SeekOrigin.Begin);
             return result;
         }
 
-        public static Vector3 ReadVector3FromOffset(uint offset)
+        public static Vector3 ReadVector3FromOffset(BinaryReader f, uint offset)
         {
-            var pos = Trb._f.BaseStream.Position;
-            Trb._f.BaseStream.Seek(offset, SeekOrigin.Begin);
-            var result = ReadVector3();
-            Trb._f.BaseStream.Seek(pos, SeekOrigin.Begin);
+            var pos = f.BaseStream.Position;
+            f.BaseStream.Seek(offset, SeekOrigin.Begin);
+            var result = ReadVector3(f);
+            f.BaseStream.Seek(pos, SeekOrigin.Begin);
             return result;
         }
     }

@@ -12,6 +12,7 @@ namespace TrbMultiTool
 	{
 		public static string _safeFileName;
 		public static BinaryReader _f;
+		public static BinaryReader SectFile;
 		public static string _fileName;
 		public static Tsfl Tsfl { get; set; }
 
@@ -21,7 +22,8 @@ namespace TrbMultiTool
 			_safeFileName = fileName.Split("\\").Last();
 			_f = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
 			Tsfl = new Tsfl();
-			var hdrx = Tsfl.Sect.Offset;
+			SectFile = new BinaryReader(new MemoryStream(Tsfl.Sect.Data.ToArray()));
+			uint hdrx = 0;
 			var previousHdrxIndex = 0;
 			var TTLWindow = new TtlWindow();
 			for (int i = 0; i < Tsfl.Symb.NameEntries.Count; i++)
@@ -41,14 +43,14 @@ namespace TrbMultiTool
 				switch (name)
 				{
 					case "TTL":
-						var Ttl = new Ttl(nameEntry.DataOffset + (uint)hdrx, nameEntry.Name);
+						var Ttl = new Ttl(nameEntry.DataOffset, nameEntry.Name);
 						TTLWindow.AddTtl(Ttl);
 						break;
 					case "FileHeader":
 						var Tmdl = new Tmdl(Tsfl.Symb.NameEntries, i, hdrx);
 						break;
 					case "Main":
-						_f.BaseStream.Seek(nameEntry.DataOffset + (uint)hdrx, SeekOrigin.Begin);
+						_f.BaseStream.Seek(nameEntry.DataOffset, SeekOrigin.Begin);
 						var Quest = new Quest();
 						break;
 					default:

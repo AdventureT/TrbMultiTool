@@ -51,23 +51,23 @@ namespace TrbMultiTool.FileFormats
 
         private static ModelVisual3D CreateMesh(long hdrx, Symb.NameEntry meshEntry)
         {
-            Trb._f.BaseStream.Seek(meshEntry.DataOffset + (uint)hdrx, System.IO.SeekOrigin.Begin);
-            uint lod_meshInfoCount = Trb._f.ReadUInt32(); //??
-            uint faceCount = Trb._f.ReadUInt32();
-            uint vertexCount = Trb._f.ReadUInt32();
-            string meshName = ReadHelper.ReadStringFromOffset(Trb._f.ReadUInt32() + (uint)hdrx);
+            Trb.SectFile.BaseStream.Seek(meshEntry.DataOffset + (uint)hdrx, System.IO.SeekOrigin.Begin);
+            uint lod_meshInfoCount = Trb.SectFile.ReadUInt32(); //??
+            uint faceCount = Trb.SectFile.ReadUInt32();
+            uint vertexCount = Trb.SectFile.ReadUInt32();
+            string meshName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + (uint)hdrx);
             tmdlWindow.meshName.Content += $"{meshName}, ";
             tmdlWindow.vertices.Content += $"{vertexCount}, ";
             tmdlWindow.faces.Content += $"{faceCount}, ";
-            uint lodSubMeshInfoOffset = Trb._f.ReadUInt32();
-            Trb._f.BaseStream.Seek((uint)hdrx + lodSubMeshInfoOffset, System.IO.SeekOrigin.Begin);
+            uint lodSubMeshInfoOffset = Trb.SectFile.ReadUInt32();
+            Trb.SectFile.BaseStream.Seek(lodSubMeshInfoOffset + (uint)hdrx, System.IO.SeekOrigin.Begin);
             var meshInfos = new List<LOD_MeshInfo>();
 
             for (int i = 0; i < lod_meshInfoCount; i++)
             {
-                meshInfos.Add(new LOD_MeshInfo(Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(),
-                    Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32(),
-                    Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle()));
+                meshInfos.Add(new LOD_MeshInfo(Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(),
+                    Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(),
+                    Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
             }
 
             var modelGroup = new Model3DGroup();
@@ -75,29 +75,29 @@ namespace TrbMultiTool.FileFormats
             {
                 var gm = new GeometryModel3D();
                 var mesh = new MeshGeometry3D();
-                Trb._f.BaseStream.Seek((uint)hdrx + meshInfos[0].vertexOffset, System.IO.SeekOrigin.Begin);
+                Trb.SectFile.BaseStream.Seek(meshInfos[0].vertexOffset + (uint)hdrx, System.IO.SeekOrigin.Begin);
                 for (int j = 0; j < meshInfos[i].vertexCount; j++)
                 {
-                    mesh.Positions.Add(new Point3D(Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle()));
-                    mesh.Normals.Add(new Vector3D(Trb._f.ReadSingle(), Trb._f.ReadSingle(), Trb._f.ReadSingle()));
-                    Trb._f.BaseStream.Seek(8, System.IO.SeekOrigin.Current);
-                    mesh.TextureCoordinates.Add(new Point(Trb._f.ReadSingle(), -Trb._f.ReadSingle()));
+                    mesh.Positions.Add(new Point3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
+                    mesh.Normals.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
+                    Trb.SectFile.BaseStream.Seek(8, System.IO.SeekOrigin.Current);
+                    mesh.TextureCoordinates.Add(new Point(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
                 }
-                Trb._f.BaseStream.Seek((uint)hdrx + meshInfos[i].faceOffset, System.IO.SeekOrigin.Begin);
+                Trb.SectFile.BaseStream.Seek(meshInfos[i].faceOffset + (uint)hdrx, System.IO.SeekOrigin.Begin);
                 int startDirection = -1;
                 uint indexCounter = 2;
                 int faceDirection = startDirection;
 
-                var faceA = Trb._f.ReadUInt16() + 1;
-                var faceB = Trb._f.ReadUInt16() + 1;
+                var faceA = Trb.SectFile.ReadUInt16() + 1;
+                var faceB = Trb.SectFile.ReadUInt16() + 1;
                 do
                 {
-                    var faceC = Trb._f.ReadUInt16();
+                    var faceC = Trb.SectFile.ReadUInt16();
                     indexCounter++;
                     if (faceC == 0xFFFF)
                     {
-                        faceA = Trb._f.ReadUInt16() + 1;
-                        faceB = Trb._f.ReadUInt16() + 1;
+                        faceA = Trb.SectFile.ReadUInt16() + 1;
+                        faceB = Trb.SectFile.ReadUInt16() + 1;
                         indexCounter += 2;
                         faceDirection = startDirection;
                     }
@@ -119,7 +119,7 @@ namespace TrbMultiTool.FileFormats
                         faceA = faceB;
                         faceB = faceC;
                     }
-                } while ((uint)Trb._f.BaseStream.Position < (meshInfos[i].faceCount * 2 + meshInfos[i].faceOffset + (uint)hdrx));
+                } while ((uint)Trb.SectFile.BaseStream.Position < (meshInfos[i].faceCount * 2 + meshInfos[i].faceOffset + (uint)hdrx));
 
                 gm.Geometry = mesh;
                 var diffuse = new DiffuseMaterial

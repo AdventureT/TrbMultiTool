@@ -44,16 +44,16 @@ namespace TrbMultiTool.FileFormats
         {
             TtlName = ttlName;
             Offset = offset;
-            Trb._f.BaseStream.Seek(Offset, System.IO.SeekOrigin.Begin);
-            TextureInfoCount = Trb._f.ReadUInt32();
-            var pos = Trb._f.BaseStream.Position;
-            Trb._f.BaseStream.Seek(Offset + Trb._f.ReadUInt32(), System.IO.SeekOrigin.Begin);
+            Trb.SectFile.BaseStream.Seek(Offset, System.IO.SeekOrigin.Begin);
+            TextureInfoCount = Trb.SectFile.ReadUInt32();
+            var pos = Trb.SectFile.BaseStream.Position;
+            Trb.SectFile.BaseStream.Seek(Offset + Trb.SectFile.ReadUInt32(), System.IO.SeekOrigin.Begin);
             for (int i = 0; i < TextureInfoCount; i++)
             {
                 TextureInfos.Add(new TextureInfo(Offset));
             }
-            Trb._f.BaseStream.Seek(pos + 4, System.IO.SeekOrigin.Begin);
-            TtlType = ReadHelper.ReadStringFromOffset(Offset + Trb._f.ReadUInt32());
+            Trb.SectFile.BaseStream.Seek(pos + 4, System.IO.SeekOrigin.Begin);
+            TtlType = ReadHelper.ReadStringFromOffset(Trb.SectFile, Offset + Trb.SectFile.ReadUInt32());
             //var TTLWindow = new TtlWindow(this);
             //TTLWindow.Show();
         }

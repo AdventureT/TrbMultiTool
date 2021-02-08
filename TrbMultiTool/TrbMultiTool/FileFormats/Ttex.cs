@@ -8,7 +8,7 @@ namespace TrbMultiTool.FileFormats
 {
     class Ttex
     {
-        public static void ResourceNameHash(string resourceName)
+        public static ulong ResourceNameHash(string resourceName)
         {
             var hash = (ulong)0;
             for (var i = 0; i < resourceName.Length; ++i)
@@ -17,6 +17,7 @@ namespace TrbMultiTool.FileFormats
                 hash = (hash << 4) + hash + value;
                 hash &= 0xFFFFFFFF;
             }
+            return hash;
         }
     }
 }

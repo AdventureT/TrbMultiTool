@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using TrbMultiTool.FileFormats;
 using static TrbMultiTool.FileFormats.Quest;
 
 namespace TrbMultiTool
@@ -21,6 +22,10 @@ namespace TrbMultiTool
     /// </summary>
     public partial class QuestWindow : Window
     {
+        public List<Quest.TypeContent> TypeContentss { get; set; } = new();
+
+        public List<Quest.TypeContent> TypeContentsWithString { get; set; } = new();
+
         public QuestWindow()
         {
             InitializeComponent();
@@ -90,6 +95,43 @@ namespace TrbMultiTool
                 default:
                     break;
             }
+        }
+
+        private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            
+        }
+
+        private void swapButton_Click(object sender, RoutedEventArgs e)
+        {
+            var typeContentCb = TypeContentsWithString[comboBox.SelectedIndex];
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+            var tag = tvi.Tag as TypeContent;
+            using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
+            writer.BaseStream.Seek(tag.PointerPos, SeekOrigin.Begin);
+            writer.Write((uint)typeContentCb.Offset - (uint)Trb.Tsfl.Sect.Offset);
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            TypeContentsWithString = TypeContentss.Where(x => x.Type == Quest.Type.String).GroupBy(p => p.Value).Select(grp => grp.FirstOrDefault()).ToList();
+            var tCWS2 = TypeContentsWithString.Select(x => x.Value);
+            comboBox.Items.Clear();
+            foreach (var item in tCWS2)
+            {
+                comboBox.Items.Add(item);
+            }
+        }
+
+        private void comboBox_DropDownOpened(object sender, EventArgs e)
+        {
+            //TypeContentsWithString = TypeContentss.Where(x => x.Type == Quest.Type.String).Distinct().ToList();
+            //var tCWS2 = TypeContentsWithString.Select(x => x.Value);
+            //comboBox.Items.Clear();
+            //foreach (var item in tCWS2)
+            //{
+            //    comboBox.Items.Add(item);
+            //}
         }
 
         //IEnumerable<TreeViewItem> Collect(TreeView nodes)

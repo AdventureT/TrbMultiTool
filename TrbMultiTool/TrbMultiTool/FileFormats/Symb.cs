@@ -25,7 +25,7 @@ namespace TrbMultiTool.FileFormats
 
 			for (int i = 0; i < Count; i++)
 			{
-				NameEntries.Add(new NameEntry() { ID = Trb._f.ReadInt16(), Name = ReadHelper.ReadStringFromOffset(Trb._f.ReadUInt32() + nameEntryOffset), NameID = Trb._f.ReadUInt16(), DataOffset = Trb._f.ReadUInt32() });
+				NameEntries.Add(new NameEntry() { ID = Trb._f.ReadInt16(), Name = ReadHelper.ReadStringFromOffset(Trb._f, Trb._f.ReadUInt32() + nameEntryOffset), NameID = Trb._f.ReadUInt16(), DataOffset = Trb._f.ReadUInt32() });
 			}
 
 			var hash = SymbolTypeHash(NameEntries[0].Name);

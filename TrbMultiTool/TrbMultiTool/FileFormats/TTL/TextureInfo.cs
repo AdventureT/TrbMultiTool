@@ -23,12 +23,12 @@ namespace TrbMultiTool.FileFormats.TTL
 
         public TextureInfo(uint offset)
         {
-            Flag = Trb._f.ReadUInt32();
-            var FileNameOffset = offset + Trb._f.ReadUInt32();
-            FileName = ReadHelper.ReadStringFromOffset(FileNameOffset);
-            DdsSize = Trb._f.ReadUInt32();
-            DdsOffset = offset + Trb._f.ReadUInt32();
-            RawImage = ReadHelper.ReadFromOffset(DdsSize, DdsOffset);
+            Flag = Trb.SectFile.ReadUInt32();
+            var FileNameOffset = offset + Trb.SectFile.ReadUInt32();
+            FileName = ReadHelper.ReadStringFromOffset(Trb.SectFile, FileNameOffset);
+            DdsSize = Trb.SectFile.ReadUInt32();
+            DdsOffset = offset + Trb.SectFile.ReadUInt32();
+            RawImage = ReadHelper.ReadFromOffset(Trb.SectFile, DdsSize, DdsOffset);
             Dds = new DDSImage(RawImage);
         }
     }

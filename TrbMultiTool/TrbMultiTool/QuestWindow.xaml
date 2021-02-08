@@ -5,13 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TrbMultiTool"
         mc:Ignorable="d"
+        Loaded="Window_Loaded"
         Title="QuestWindow" Height="450" Width="800">
     <Grid>
         <TreeView x:Name="treeView" Margin="0,0,426,0" SelectedItemChanged="treeView_SelectedItemChanged"/>
         <TextBox HorizontalAlignment="Left" Margin="500,117,0,0" Text="Value" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" x:Name="textBox" TextChanged="textBox_TextChanged"/>
         <Label Content="Type" HorizontalAlignment="Left" Margin="436,111,0,0" VerticalAlignment="Top" Height="30" Width="41" x:Name="label"/>
         <Button Content="Apply to file" HorizontalAlignment="Left" Margin="552,140,0,0" VerticalAlignment="Top" Click="Button_Click" x:Name="applyButton"/>
-
+        <Label Content="Swap with" HorizontalAlignment="Left" Margin="424,187,0,0" VerticalAlignment="Top" Height="30" Width="66"/>
+        <ComboBox HorizontalAlignment="Left" Margin="500,191,0,0" VerticalAlignment="Top" Width="120" x:Name="comboBox" SelectionChanged="comboBox_SelectionChanged" DropDownOpened="comboBox_DropDownOpened"/>
+        <Button Content="Swap" HorizontalAlignment="Left" Margin="552,218,0,0" VerticalAlignment="Top" Height="22" Width="68" x:Name="swapButton" Click="swapButton_Click"/>
 
     </Grid>
 </Window>
