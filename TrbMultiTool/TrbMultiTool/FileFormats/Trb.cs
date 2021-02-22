@@ -20,45 +20,58 @@ namespace TrbMultiTool
 		{
 			_fileName = fileName;
 			_safeFileName = fileName.Split("\\").Last();
-			_f = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
-			Tsfl = new Tsfl();
+            //SectFile = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
+            //SectFile.BaseStream.Seek(0, SeekOrigin.Begin);
+            //var Quest = new Quest();
+            //return;
+            _f = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
+            Tsfl = new Tsfl();
 			SectFile = new BinaryReader(new MemoryStream(Tsfl.Sect.Data.ToArray()));
 			uint hdrx = 0;
-			var previousHdrxIndex = 0;
+			var previousHdrxIndex = -1;
+            var previousNameEntries = new List<Symb.NameEntry>();
 			var TTLWindow = new TtlWindow();
-			for (int i = 0; i < Tsfl.Symb.NameEntries.Count; i++)
+            var TMDLWindow = new TmdlWindow();
+            for (int i = 0; i < Tsfl.Symb.NameEntries.Count; i++)
 			{
-				var nameEntry = Tsfl.Symb.NameEntries[i];
-				if (previousHdrxIndex != nameEntry.ID)
-				{
-					hdrx += Tsfl.Hdrx.TagInfos[previousHdrxIndex].TagSize;
-					previousHdrxIndex++;
-				}
-				var name = nameEntry.Name;
-				if (nameEntry.Name.Contains('_')) //Pretty dirty
-				{
-					var splittedNameEntry = nameEntry.Name.Split('_');
-					name = splittedNameEntry.Last();
-				}
-				switch (name)
-				{
-					case "TTL":
-						var Ttl = new Ttl(nameEntry.DataOffset, nameEntry.Name);
-						TTLWindow.AddTtl(Ttl);
-						break;
-					case "FileHeader":
-						var Tmdl = new Tmdl(Tsfl.Symb.NameEntries, i, hdrx);
-						break;
-					case "Main":
-						_f.BaseStream.Seek(nameEntry.DataOffset, SeekOrigin.Begin);
-						var Quest = new Quest();
-						break;
-					default:
-						break;
-				}
-			}
-			if (TTLWindow.Ttls.Any()) TTLWindow.ShowDialog();
-			_f.Close();
+                var nameEntry = Tsfl.Symb.NameEntries[i];
+                if (previousHdrxIndex+1 != nameEntry.ID || i == Tsfl.Symb.NameEntries.Count-1)
+                {
+                    if (i != Tsfl.Symb.NameEntries.Count - 1)
+                    {
+                        if (previousHdrxIndex != -1)
+                        {
+                            hdrx += Tsfl.Hdrx.TagInfos[previousHdrxIndex].TagSize;
+                        }
+                        previousHdrxIndex++;
+                    }
+                    else
+                    {
+                        previousNameEntries.Add(nameEntry);
+                    }
+                    
+                    if (previousNameEntries.FirstOrDefault().Name.Contains("FileHeader"))
+                    {
+                        var Tmdl = new Tmdl(previousNameEntries, hdrx);
+                        TMDLWindow.AddTmdl(Tmdl);
+                    }
+                    else if (previousNameEntries.FirstOrDefault().Name.Contains("TTL"))
+                    {
+                        var Ttl = new Ttl(previousNameEntries.FirstOrDefault().DataOffset + (uint)hdrx, previousNameEntries.FirstOrDefault().Name);
+                        TTLWindow.AddTtl(Ttl);
+                    }
+                    else if (previousNameEntries.FirstOrDefault().Name.Contains("Main"))
+                    {
+                        _f.BaseStream.Seek(previousNameEntries.FirstOrDefault().DataOffset, SeekOrigin.Begin);
+                        var Quest = new PProperty();
+                    }
+                    previousNameEntries.Clear();
+                }
+                previousNameEntries.Add(nameEntry);
+            }
+			if (TTLWindow.Ttls.Any()) TTLWindow.Show();
+            if (TMDLWindow.Tmdls.Any()) TMDLWindow.Show();
+            _f.Close();
 		}
 	}
 }

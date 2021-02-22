@@ -1,4 +1,4 @@
-﻿<Window x:Class="TrbMultiTool.QuestWindow"
+﻿<Window x:Class="TrbMultiTool.PPropertyWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TrbMultiTool"
         mc:Ignorable="d"
         Loaded="Window_Loaded"
-        Title="QuestWindow" Height="450" Width="800">
+        Title="PProperties" Height="450" Width="800">
     <Grid>
         <TreeView x:Name="treeView" Margin="0,0,426,0" SelectedItemChanged="treeView_SelectedItemChanged"/>
         <TextBox HorizontalAlignment="Left" Margin="500,117,0,0" Text="Value" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" x:Name="textBox" TextChanged="textBox_TextChanged"/>

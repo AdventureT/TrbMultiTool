@@ -9,20 +9,29 @@ using System.Windows.Media.Media3D;
 
 namespace TrbMultiTool.FileFormats
 {
-    class Tmdl
+    public class Tmdl
     {
+        record Database(uint Count, uint offset);
+
+        record SubInfoOffset(uint offset);
+        //record SubInfo()
+
         record FileHeader(string signature, uint u, uint u2, uint u3); //TODO
         record SkeletonHeader(string fileName); //TODO
         record Skeleton(uint boneCount); //TODO
         record Materials(uint uk, uint uk2, uint uk3, uint size); //TODO
-        record Collision(uint uk); //TODO
+        record Collision(uint count, uint offset); //TODO
         record Header(uint uk); //TODO 36 Bytes
 
         record LOD_MeshInfo(uint unknown, uint vertexCount, uint faceCount, uint indicesCount, uint indicesOffset, uint vertexOffset, uint faceOffset, uint zero, uint hash, float f1, float f2, float f3, float f4);
 
-        static TmdlWindow tmdlWindow = new();
+        //static TmdlWindow tmdlWindow = new();
 
-        public Tmdl(List<Symb.NameEntry> nameEntry, int index, long hdrx)
+        public string TmdlName { get; set; }
+
+        public List<ModelVisual3D> MVs { get; set; } = new();
+
+        public Tmdl(List<Symb.NameEntry> nameEntry, long hdrx)
         {
             //var meshEntry = nameEntry[index + 6];
             //var splittedNameEntry = meshEntry.Name.Split('_');
@@ -30,23 +39,30 @@ namespace TrbMultiTool.FileFormats
             //if (splittedNameEntry[1] != "Mesh") throw new Exception("No meshes?");
             //tmdlWindow.myViewport.Children.Clear();
             //CreateMesh(hdrx, meshEntry);
-            tmdlWindow.modelName.Content = $"Opened Model: {Trb._safeFileName}";
-            var copy = nameEntry;
-            copy.RemoveRange(0, index);
-            tmdlWindow.myViewport.Children.Clear();
+            //tmdlWindow.meshName.Content = "";
+            //tmdlWindow.vertices.Content = "";
+            //tmdlWindow.faces.Content = "";
+            //tmdlWindow.modelName.Content = $"Opened Model: {Trb._safeFileName}";
+            //tmdlWindow.myViewport.Children.Clear();
 
-            var meshEntries = copy.FindAll(x => x.Name.Contains("LOD0"));
+            var fileHeaderEntry = nameEntry.Find(x => x.Name.Contains("FileHeader"));
+            TmdlName = fileHeaderEntry.Name.Split('_').FirstOrDefault();
+            Trb.SectFile.BaseStream.Seek(fileHeaderEntry.DataOffset + (uint)hdrx, System.IO.SeekOrigin.Begin);
+            var fileHeader = new FileHeader(new string(Trb.SectFile.ReadChars(4)), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32());
+            if (fileHeader.signature != "TMDL") return;
+
+            var meshEntries = nameEntry.FindAll(x => x.Name.Contains("LOD0"));
             foreach (var item in meshEntries)
             {
                 var meshEntry = item;
-                var splittedNameEntry = meshEntry.Name.Split('_');
-                if (splittedNameEntry.First() != "LOD0") throw new Exception("Only LOD0 is implemented currently");
-                if (splittedNameEntry[1] != "Mesh") throw new Exception("No meshes?");
+                //var splittedNameEntry = meshEntry.Name.Split('_');
+                //if (splittedNameEntry.First() != "LOD0") throw new Exception("Only LOD0 is implemented currently");
+                //if (splittedNameEntry[1] != "Mesh") throw new Exception("No meshes?");
 
-                CreateMesh(hdrx, meshEntry);
+                MVs.Add(CreateMesh(hdrx, meshEntry));
             }
 
-            tmdlWindow.Show();
+            //tmdlWindow.Show();
         }
 
         private static ModelVisual3D CreateMesh(long hdrx, Symb.NameEntry meshEntry)
@@ -56,9 +72,9 @@ namespace TrbMultiTool.FileFormats
             uint faceCount = Trb.SectFile.ReadUInt32();
             uint vertexCount = Trb.SectFile.ReadUInt32();
             string meshName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + (uint)hdrx);
-            tmdlWindow.meshName.Content += $"{meshName}, ";
-            tmdlWindow.vertices.Content += $"{vertexCount}, ";
-            tmdlWindow.faces.Content += $"{faceCount}, ";
+            //tmdlWindow.meshName.Content += $"{meshName}, ";
+            //tmdlWindow.vertices.Content += $"{vertexCount}, ";
+            //tmdlWindow.faces.Content += $"{faceCount}, ";
             uint lodSubMeshInfoOffset = Trb.SectFile.ReadUInt32();
             Trb.SectFile.BaseStream.Seek(lodSubMeshInfoOffset + (uint)hdrx, System.IO.SeekOrigin.Begin);
             var meshInfos = new List<LOD_MeshInfo>();
@@ -146,8 +162,7 @@ namespace TrbMultiTool.FileFormats
             {
                 Content = modelGroup
             };
-            tmdlWindow.myViewport.Children.Add(modelVisual);
-
+            //tmdlWindow.myViewport.Children.Add(modelVisual);
             return modelVisual;
         }
     }

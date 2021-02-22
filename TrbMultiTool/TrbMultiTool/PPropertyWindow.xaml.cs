@@ -13,20 +13,20 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using TrbMultiTool.FileFormats;
-using static TrbMultiTool.FileFormats.Quest;
+using static TrbMultiTool.FileFormats.PProperty;
 
 namespace TrbMultiTool
 {
     /// <summary>
     /// Interaction logic for QuestWindow.xaml
     /// </summary>
-    public partial class QuestWindow : Window
+    public partial class PPropertyWindow : Window
     {
-        public List<Quest.TypeContent> TypeContentss { get; set; } = new();
+        public List<PProperty.TypeContent> TypeContentss { get; set; } = new();
 
-        public List<Quest.TypeContent> TypeContentsWithString { get; set; } = new();
+        public List<PProperty.TypeContent> TypeContentsWithString { get; set; } = new();
 
-        public QuestWindow()
+        public PPropertyWindow()
         {
             InitializeComponent();
         }
@@ -55,24 +55,24 @@ namespace TrbMultiTool
             writer.BaseStream.Seek(tag.Offset, SeekOrigin.Begin);
             switch (tag.Type)
             {
-                case FileFormats.Quest.Type.Int:
+                case FileFormats.PProperty.Type.Int:
                     writer.Write(Convert.ToUInt32(textBox.Text));
                     break;
-                case FileFormats.Quest.Type.Unknown:
+                case FileFormats.PProperty.Type.Unknown:
                     break;
-                case FileFormats.Quest.Type.Float:
+                case FileFormats.PProperty.Type.Float:
                     writer.Write(Convert.ToSingle(textBox.Text));
                     break;
-                case FileFormats.Quest.Type.Bool:
+                case FileFormats.PProperty.Type.Bool:
                     writer.Write(Convert.ToBoolean(textBox.Text) ? 1 : 0);
                     break;
-                case FileFormats.Quest.Type.SubItem:
+                case FileFormats.PProperty.Type.SubItem:
                     break;
-                case FileFormats.Quest.Type.Unknown2:
+                case FileFormats.PProperty.Type.Unknown2:
                     break;
-                case FileFormats.Quest.Type.Player:
+                case FileFormats.PProperty.Type.Player:
                     break;
-                case FileFormats.Quest.Type.String:
+                case FileFormats.PProperty.Type.String:
                     if (textBox.Text.Length > tag.Value.Length)
                     {
                         MessageBox.Show("Your inputted string is too large!");
@@ -89,7 +89,7 @@ namespace TrbMultiTool
                         writer.Write(charArr);
                     }
                     break;
-                case FileFormats.Quest.Type.UInt:
+                case FileFormats.PProperty.Type.UInt:
                     writer.Write(Convert.ToUInt32(textBox.Text));
                     break;
                 default:
@@ -114,7 +114,7 @@ namespace TrbMultiTool
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            TypeContentsWithString = TypeContentss.Where(x => x.Type == Quest.Type.String).GroupBy(p => p.Value).Select(grp => grp.FirstOrDefault()).ToList();
+            TypeContentsWithString = TypeContentss.Where(x => x.Type == PProperty.Type.String).GroupBy(p => p.Value).Select(grp => grp.FirstOrDefault()).ToList();
             var tCWS2 = TypeContentsWithString.Select(x => x.Value);
             comboBox.Items.Clear();
             foreach (var item in tCWS2)

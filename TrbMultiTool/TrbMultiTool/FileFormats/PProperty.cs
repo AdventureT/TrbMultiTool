@@ -7,7 +7,7 @@ using System.Windows.Controls;
 
 namespace TrbMultiTool.FileFormats
 {
-    public class Quest
+    public class PProperty
     {
         public int Zero { get; set; }
         public uint Offset { get; set; }
@@ -24,9 +24,9 @@ namespace TrbMultiTool.FileFormats
             Unknown,
             Float,
             Bool,
-            SubItem,
-            Unknown2,
-            Player,
+            SubItem, //TP8String
+            Unknown2, //String16
+            Player,//String16
             String,
             UInt
         };
@@ -35,9 +35,9 @@ namespace TrbMultiTool.FileFormats
 
         public List<TypeContent> TypeContents { get; set; } = new();
 
-        public QuestWindow QuestWindow { get; set; } = new();
+        public PPropertyWindow QuestWindow { get; set; } = new();
 
-        public Quest()
+        public PProperty()
         {
             Zero = Trb.SectFile.ReadInt32();
             Offset = Trb.SectFile.ReadUInt32();
@@ -45,7 +45,7 @@ namespace TrbMultiTool.FileFormats
             Trb.SectFile.BaseStream.Seek(Offset, System.IO.SeekOrigin.Begin);
             var tvi = new TreeViewItem
             {
-                Header = "Quests"
+                Header = "Properties"
             };
             Item(Count, tvi);
             QuestWindow.treeView.Items.Add(tvi);
@@ -91,7 +91,7 @@ namespace TrbMultiTool.FileFormats
                     Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(Trb.SectFile, textOffset), textOffset, Trb.SectFile.BaseStream.Position - 4),
                     //Uint
                     Type.UInt => new TypeContent(Type.UInt, Trb.SectFile.ReadUInt32().ToString(), Trb.SectFile.BaseStream.Position - 4),
-                    _ => throw new NotImplementedException($"Type {subInfo.Type} hasn't been implemented yet"),
+                    _ => $"Type {subInfo.Type} hasn't been implemented yet",
                 };
                 TypeContents.Add((TypeContent)tvi.Tag);
                 prev.Items.Add(tvi);
@@ -107,9 +107,10 @@ namespace TrbMultiTool.FileFormats
             //var subsubInfo3 = new SubSubInfo(Trb._f.ReadUInt32(), Trb._f.ReadUInt32(), Trb._f.ReadUInt32());
             Trb.SectFile.BaseStream.Seek(subsubInfo2.Offset2, System.IO.SeekOrigin.Begin);
             Item(subsubInfo2.Offset2Count, prev);
-            return new TypeContent(Type.String, "SubInfo", 0);
+            return new TypeContent(Type.String, "SubProperty", 0);
         }
 
+        //This method can be replaced and it is not player only...
         private TypeContent Player(ref TreeViewItem prev)
         {
             Trb.SectFile.BaseStream.Seek(Trb.SectFile.ReadUInt32(), System.IO.SeekOrigin.Begin);
@@ -128,19 +129,21 @@ namespace TrbMultiTool.FileFormats
                     {
                         //string
                         Type.String => ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value),
-                        _ => throw new NotImplementedException($"Type {playerSubInfo.Type} hasn't been implemented yet"),
+                        Type.Int => playerSubInfo.Value,
+                        _ => $"Type {playerSubInfo.Type} hasn't been implemented yet",
                     },
                     Tag = playerSubInfo.Type switch
                     {
                         //string
                         Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value), playerSubInfo.Value, Trb.SectFile.BaseStream.Position - 4),
-                        _ => throw new NotImplementedException($"Type {playerSubInfo.Type} hasn't been implemented yet"),
+                        Type.Int => new TypeContent(Type.Int, playerSubInfo.Value.ToString(), Trb.SectFile.BaseStream.Position - 4),
+                        _ => new TypeContent(Type.String, $"Type {playerSubInfo.Type} hasn't been implemented yet", 0, 0) ,
                     }
                 };
                 TypeContents.Add((TypeContent)tvi.Tag);
                 prev.Items.Add(tvi);
             }
-            return new TypeContent(Type.String, "Players", 0);
+            return new TypeContent(Type.String, "SubProperty", 0);
         }
     }
 }

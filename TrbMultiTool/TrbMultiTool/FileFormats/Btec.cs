@@ -60,6 +60,12 @@ namespace TrbMultiTool.FileFormats
                 }
 
             }
+
+            using (var writer = new BinaryWriter(File.Open(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\test.trb", FileMode.Create, FileAccess.Write)))
+            {
+                writer.Write(DecompressedData.ToArray());
+            }
+
         }
 
         private static int GetReadCount(long file_pos, ref bool read_dst, ref int size, ref int offset)

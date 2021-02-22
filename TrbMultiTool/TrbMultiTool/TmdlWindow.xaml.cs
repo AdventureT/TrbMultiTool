@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
+using TrbMultiTool.FileFormats;
 
 namespace TrbMultiTool
 {
@@ -22,6 +23,7 @@ namespace TrbMultiTool
     {
         const double speed = 7.5;
         const double rotationSpeed = speed * 6;
+        public List<Tmdl> Tmdls { get; set; } = new();
 
         public TmdlWindow()
         {
@@ -71,16 +73,16 @@ namespace TrbMultiTool
         {
             switch (e.Key)
             {
-                case Key.Right:
+                case Key.D:
                     Rotate(rotationSpeed);
                     break;
-                case Key.Left:
+                case Key.A:
                     Rotate(-rotationSpeed);
                     break;
-                case Key.Up:
+                case Key.W:
                     Move(speed);
                     break;
-                case Key.Down:
+                case Key.S:
                     Move(-speed);
                     break;
                 case Key.E:
@@ -92,10 +94,43 @@ namespace TrbMultiTool
             }
         }
 
+        public void AddTmdl(Tmdl tmdl)
+        {
+            Tmdls.Add(tmdl);
+            ReadTmdl();
+        }
+
+        private void ReadTmdl()
+        {
+            var lvi = new TreeViewItem
+            {
+                Header = Tmdls.Last().TmdlName
+            };
+            lvi.Tag = Tmdls.Last();
+            treeView.Items.Add(lvi);
+        }
+
+        private void LoadTmdl(TreeViewItem tvi)
+        {
+            var tmdl = tvi.Tag as Tmdl;
+            myViewport.Children.Clear();
+            modelName.Content = $"Opened Model: {Trb._safeFileName}";
+            foreach (var mv in tmdl.MVs)
+            {
+                myViewport.Children.Add(mv);
+            }
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
             Hide();
+        }
+
+        private void treeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            var sI = (TreeViewItem)treeView.SelectedItem;
+            LoadTmdl(sI);
         }
     }
 }
