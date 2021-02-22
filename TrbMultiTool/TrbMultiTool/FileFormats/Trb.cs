@@ -47,6 +47,7 @@ namespace TrbMultiTool
                     }
                     else
                     {
+                        hdrx += Tsfl.Hdrx.TagInfos[previousHdrxIndex].TagSize;
                         previousNameEntries.Add(nameEntry);
                     }
                     
