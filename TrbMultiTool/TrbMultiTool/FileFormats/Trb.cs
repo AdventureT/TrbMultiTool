@@ -30,7 +30,8 @@ namespace TrbMultiTool
 			uint hdrx = 0;
 			var previousHdrxIndex = -1;
             var previousNameEntries = new List<Symb.NameEntry>();
-			var TTLWindow = new TtlWindow();
+
+            var TTLWindow = new TtlWindow();
             var TMDLWindow = new TmdlWindow();
             for (int i = 0; i < Tsfl.Symb.NameEntries.Count; i++)
 			{
@@ -47,6 +48,7 @@ namespace TrbMultiTool
                     }
                     else
                     {
+                        if (previousHdrxIndex == -1) previousHdrxIndex++;
                         hdrx += Tsfl.Hdrx.TagInfos[previousHdrxIndex].TagSize;
                         previousNameEntries.Add(nameEntry);
                     }

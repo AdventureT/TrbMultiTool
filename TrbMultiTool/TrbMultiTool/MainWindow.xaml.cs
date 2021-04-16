@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using TrbMultiTool;
 
 namespace TrbMultiTool
@@ -44,11 +46,35 @@ namespace TrbMultiTool
 
 		private void ChooseGameComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if ((Game)ChooseGameComboBox.SelectedIndex == Game.Barnyard) ImageBox.Source = new BitmapImage(new Uri("Resources/barnyard.png", UriKind.Relative));
-			if ((Game)ChooseGameComboBox.SelectedIndex == Game.NicktoonsUnite) ImageBox.Source = new BitmapImage(new Uri("Resources/nicktoonsUnite.jpg", UriKind.Relative));
-		}
+            switch ((Game)ChooseGameComboBox.SelectedIndex)
+            {
+                case Game.Barnyard:
+                    ImageBox.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/barnyard.png"));
+                    break;
+                case Game.NicktoonsUnite:
+                    ImageBox.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/nicktoonsunite.png"));
+                    break;
+                case Game.NicktoonsBattleForVolcanoIsland:
+					ImageBox.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/nbfvi.jpg"));
+					break;
+                case Game.NicktoonsAttackOfTheToybots:
+					ImageBox.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/naott.jfif"));
+					break;
+                case Game.ElTigre:
+					ImageBox.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/eltigre.jpg"));
+					break;
+                case Game.MarvelSuperHeroSquad:
+					ImageBox.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/mshs.jpg"));
+					break;
+                case Game.DeBlob:
+					ImageBox.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/deblob.jpg"));
+					break;
+                default:
+                    break;
+            }
+        }
 
-		private void ChooseFileButton_Click(object sender, RoutedEventArgs e)
+        private async void ChooseFileButton_Click(object sender, RoutedEventArgs e)
 		{
 			var openFileDialog = new OpenFileDialog
 			{
@@ -59,8 +85,9 @@ namespace TrbMultiTool
 
 			if ((bool)openFileDialog.ShowDialog())
 			{
-				new Trb(openFileDialog.FileName);
+				await Dispatcher.InvokeAsync(() => new Trb(openFileDialog.FileName));
 			}
+
 		}
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
