@@ -7,6 +7,7 @@ on:
 
 env:
   DOTNET_VERSION: '5.0.x'
+  PROJECT_PATH: TrbMultiTool/TrbMultiTool.sln
 
 jobs:
   build:
@@ -21,13 +22,13 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies 🛠
-        run: dotnet restore
+        run: dotnet restore ${{ env.PROJECT_PATH }}
       
       - name: Build app 🚀
-        run: dotnet build -c Release --no-restore
+        run: dotnet build ${{ env.PROJECT_PATH }} -c Release --no-restore
 
       - name: Run automated tests 🧪
-        run: dotnet test -c Release --no-build
+        run: dotnet test ${{ env.PROJECT_PATH }} -c Release --no-build
 
       - name: Publish app 📰
-        run: dotnet publish -c Release -o ./out
+        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ./out
