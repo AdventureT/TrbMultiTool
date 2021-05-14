@@ -25,6 +25,8 @@ namespace TrbMultiTool
     {
         public List<Ttl> Ttls { get; set; } = new();
 
+        public List<Ttex> Ttex { get; set; } = new();
+
         //public List<TreeViewItem> Lvis { get; set; } = new();
 
         public TtlWindow(Ttl ttl)
@@ -42,6 +44,22 @@ namespace TrbMultiTool
         {
             Ttls.Add(ttl);
             ReadTtl();
+        }
+
+        public void AddTtex(Ttex ttl)
+        {
+            Ttex.Add(ttl);
+            ReadTtex();
+        }
+
+        private void ReadTtex()
+        {
+            var lvi = new TreeViewItem
+            {
+                Header = Ttex.Last().TextureName
+            };
+            lvi.Tag = Ttex.Last();
+            treeView.Items.Add(lvi);
         }
 
         private void ReadTtl()
@@ -65,7 +83,16 @@ namespace TrbMultiTool
 
         private void LoadTtl(TreeViewItem tvi)
         {
+            if (tvi.Tag is Ttex) { LoadTtex(tvi); return; }
             var dds = ((TextureInfo)tvi.Tag).Dds;
+            img.Source = Ttl.LoadBitmap(dds.BitmapImage);
+            img.Width = dds.BitmapImage.Width;
+            img.Height = dds.BitmapImage.Height;
+        }
+
+        private void LoadTtex(TreeViewItem tvi)
+        {
+            var dds = ((Ttex)tvi.Tag).DDS;
             img.Source = Ttl.LoadBitmap(dds.BitmapImage);
             img.Width = dds.BitmapImage.Width;
             img.Height = dds.BitmapImage.Height;
@@ -93,7 +120,7 @@ namespace TrbMultiTool
 
             if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
             {
-                var wholeName = ((TextureInfo)sI.Tag).FileName.Split('\\');
+                var wholeName = sI.Tag is Ttex ttex ? ttex.TextureName.Split('\\') : ((TextureInfo)sI.Tag).FileName.Split('\\');
                 var dirName = "";
                 var fileName = "";
                 if (wholeName.Length > 1) // Create Directory
@@ -112,7 +139,8 @@ namespace TrbMultiTool
 
                 // Write the dds file
                 using BinaryWriter writer = new BinaryWriter(File.Open($"{fbd.SelectedPath}\\{dirName}\\{fileName}", FileMode.Create));
-                writer.Write(((TextureInfo)sI.Tag).RawImage);
+                if (sI.Tag is Ttex) writer.Write(((Ttex)sI.Tag).RawImage);
+                else writer.Write(((TextureInfo)sI.Tag).RawImage);
             }
         }
     }

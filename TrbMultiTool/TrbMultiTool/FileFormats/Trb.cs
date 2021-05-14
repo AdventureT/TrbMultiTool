@@ -70,14 +70,14 @@ namespace TrbMultiTool
                     }
                     else if (previousNameEntries.FirstOrDefault().Name.Contains("ttex"))
                     {
-                        _f.BaseStream.Seek(previousNameEntries.FirstOrDefault().DataOffset, SeekOrigin.Begin);
-                        var Ttex = new Ttex();
+                        SectFile.BaseStream.Seek(previousNameEntries.FirstOrDefault().DataOffset + (uint)hdrx, SeekOrigin.Begin);
+                        TTLWindow.AddTtex(new Ttex(previousNameEntries.FirstOrDefault().DataOffset + (uint)hdrx));
                     }
                     previousNameEntries.Clear();
                 }
                 previousNameEntries.Add(nameEntry);
             }
-			if (TTLWindow.Ttls.Any()) TTLWindow.Show();
+			if (TTLWindow.Ttls.Any() || TTLWindow.Ttex.Any()) TTLWindow.Show();
             if (TMDLWindow.Tmdls.Any()) TMDLWindow.Show();
             _f.Close();
 		}
