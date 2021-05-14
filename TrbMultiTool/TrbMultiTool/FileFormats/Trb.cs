@@ -68,6 +68,11 @@ namespace TrbMultiTool
                         _f.BaseStream.Seek(previousNameEntries.FirstOrDefault().DataOffset, SeekOrigin.Begin);
                         var Quest = new PProperty();
                     }
+                    else if (previousNameEntries.FirstOrDefault().Name.Contains("ttex"))
+                    {
+                        _f.BaseStream.Seek(previousNameEntries.FirstOrDefault().DataOffset, SeekOrigin.Begin);
+                        var Ttex = new Ttex();
+                    }
                     previousNameEntries.Clear();
                 }
                 previousNameEntries.Add(nameEntry);
