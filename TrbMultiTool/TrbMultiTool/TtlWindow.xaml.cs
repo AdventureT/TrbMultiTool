@@ -138,7 +138,7 @@ namespace TrbMultiTool
                 }
 
                 // Write the dds file
-                using BinaryWriter writer = new BinaryWriter(File.Open($"{fbd.SelectedPath}\\{dirName}\\{fileName}", FileMode.Create));
+                using BinaryWriter writer = new(File.Open($"{fbd.SelectedPath}\\{dirName}\\{fileName}", FileMode.Create));
                 if (sI.Tag is Ttex) writer.Write(((Ttex)sI.Tag).RawImage);
                 else writer.Write(((TextureInfo)sI.Tag).RawImage);
             }

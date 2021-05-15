@@ -85,7 +85,7 @@ namespace TrbMultiTool
 
 			if ((bool)openFileDialog.ShowDialog())
 			{
-				await Dispatcher.InvokeAsync(() => new Trb(openFileDialog.FileName));
+				await Dispatcher.InvokeAsync(() => new Trb(openFileDialog.FileName, (Game)ChooseGameComboBox.SelectedIndex));
 			}
 
 		}

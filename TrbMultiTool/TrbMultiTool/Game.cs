@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TrbMultiTool
 {
-	enum Game
+	public enum Game
 	{
 		Barnyard,
 		NicktoonsUnite,

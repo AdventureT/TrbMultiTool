@@ -16,7 +16,8 @@ namespace TrbMultiTool.FileFormats
 			public uint TagSize { get; set; }
 			public uint Zero { get; set; }
 			public uint Flag { get; set; }
-		};
+            public uint Offset { get; set; }
+        };
 		public List<TagInfo> TagInfos { get; set; } = new();
 
 		public Hdrx() : base()
@@ -27,7 +28,9 @@ namespace TrbMultiTool.FileFormats
 
 			for (int i = 0; i < Files; i++)
 			{
-				TagInfos.Add(new TagInfo() { Unknown = Trb._f.ReadUInt16(), Unknown2 = Trb._f.ReadUInt16(), TagSize = Trb._f.ReadUInt32(), Zero = Trb._f.ReadUInt32(), Flag = Trb._f.ReadUInt32() } );
+				var tagInfo = new TagInfo() { Unknown = Trb._f.ReadUInt16(), Unknown2 = Trb._f.ReadUInt16(), TagSize = Trb._f.ReadUInt32(), Zero = Trb._f.ReadUInt32(), Flag = Trb._f.ReadUInt32() };
+				tagInfo.Offset = i == 0 ? 0 : TagInfos[i - 1].Offset + TagInfos[i - 1].TagSize; //Adding Sizes to make Offsets
+				TagInfos.Add(tagInfo);
 			}
 		}
 	}

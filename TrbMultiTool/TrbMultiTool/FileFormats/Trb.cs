@@ -11,15 +11,17 @@ namespace TrbMultiTool
 	public class Trb
 	{
 		public static string _safeFileName;
+        public static Game _game;
 		public static BinaryReader _f;
 		public static BinaryReader SectFile;
 		public static string _fileName;
 		public static Tsfl Tsfl { get; set; }
 
-		public Trb(string fileName)
+		public Trb(string fileName, Game game)
 		{
 			_fileName = fileName;
 			_safeFileName = fileName.Split("\\").Last();
+            _game = game;
             //SectFile = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
             //SectFile.BaseStream.Seek(0, SeekOrigin.Begin);
             //var Quest = new Quest();
@@ -28,55 +30,37 @@ namespace TrbMultiTool
             Tsfl = new Tsfl();
 			SectFile = new BinaryReader(new MemoryStream(Tsfl.Sect.Data.ToArray()));
 			uint hdrx = 0;
-			var previousHdrxIndex = -1;
-            var previousNameEntries = new List<Symb.NameEntry>();
 
             var TTLWindow = new TtlWindow();
             var TMDLWindow = new TmdlWindow();
-            for (int i = 0; i < Tsfl.Symb.NameEntries.Count; i++)
-			{
-                var nameEntry = Tsfl.Symb.NameEntries[i];
-                if (previousHdrxIndex+1 != nameEntry.ID || i == Tsfl.Symb.NameEntries.Count-1)
+
+            var groupByIds = Tsfl.Symb.NameEntries.GroupBy(e => e.ID); //Group by IDs
+            foreach (var item in groupByIds)
+            {
+                hdrx = Tsfl.Hdrx.TagInfos[item.Key].Offset;
+
+                if (item.FirstOrDefault().Name.Contains("FileHeader"))
                 {
-                    if (i != Tsfl.Symb.NameEntries.Count - 1)
-                    {
-                        if (previousHdrxIndex != -1)
-                        {
-                            hdrx += Tsfl.Hdrx.TagInfos[previousHdrxIndex].TagSize;
-                        }
-                        previousHdrxIndex++;
-                    }
-                    else
-                    {
-                        if (previousHdrxIndex == -1) previousHdrxIndex++;
-                        hdrx += Tsfl.Hdrx.TagInfos[previousHdrxIndex].TagSize;
-                        previousNameEntries.Add(nameEntry);
-                    }
-                    
-                    if (previousNameEntries.FirstOrDefault().Name.Contains("FileHeader"))
-                    {
-                        var Tmdl = new Tmdl(previousNameEntries, hdrx);
-                        TMDLWindow.AddTmdl(Tmdl);
-                    }
-                    else if (previousNameEntries.FirstOrDefault().Name.Contains("TTL"))
-                    {
-                        var Ttl = new Ttl(previousNameEntries.FirstOrDefault().DataOffset + (uint)hdrx, previousNameEntries.FirstOrDefault().Name);
-                        TTLWindow.AddTtl(Ttl);
-                    }
-                    else if (previousNameEntries.FirstOrDefault().Name.Contains("Main"))
-                    {
-                        _f.BaseStream.Seek(previousNameEntries.FirstOrDefault().DataOffset, SeekOrigin.Begin);
-                        var Quest = new PProperty();
-                    }
-                    else if (previousNameEntries.FirstOrDefault().Name.Contains("ttex"))
-                    {
-                        SectFile.BaseStream.Seek(previousNameEntries.FirstOrDefault().DataOffset + (uint)hdrx, SeekOrigin.Begin);
-                        TTLWindow.AddTtex(new Ttex(previousNameEntries.FirstOrDefault().DataOffset + (uint)hdrx));
-                    }
-                    previousNameEntries.Clear();
+                    var Tmdl = new Tmdl(item.ToList(), hdrx);
+                    TMDLWindow.AddTmdl(Tmdl);
                 }
-                previousNameEntries.Add(nameEntry);
+                else if (item.FirstOrDefault().Name.Contains("TTL"))
+                {
+                    var Ttl = new Ttl(item.FirstOrDefault().DataOffset + hdrx, item.FirstOrDefault().Name);
+                    TTLWindow.AddTtl(Ttl);
+                }
+                else if (item.FirstOrDefault().Name.Contains("Main"))
+                {
+                    _f.BaseStream.Seek(item.FirstOrDefault().DataOffset, SeekOrigin.Begin);
+                    var Quest = new PProperty();
+                }
+                else if (item.FirstOrDefault().Name.Contains("ttex"))
+                {
+                    SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
+                    TTLWindow.AddTtex(new Ttex(item.FirstOrDefault().DataOffset + hdrx));
+                }
             }
+
 			if (TTLWindow.Ttls.Any() || TTLWindow.Ttex.Any()) TTLWindow.Show();
             if (TMDLWindow.Tmdls.Any()) TMDLWindow.Show();
             _f.Close();
