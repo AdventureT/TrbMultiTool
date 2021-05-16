@@ -82,10 +82,11 @@ namespace TrbMultiTool.FileFormats
             }
         }
 
-        private static ModelVisual3D CreateMeshBlob(uint hdrx, Symb.NameEntry meshEntry)
+        private ModelVisual3D CreateMeshBlob(uint hdrx, Symb.NameEntry meshEntry)
         {
             Trb.SectFile.BaseStream.Seek(meshEntry.DataOffset + hdrx, System.IO.SeekOrigin.Begin);
             var modelFileNameOffset = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + hdrx);
+            TmdlName = modelFileNameOffset;
             var modelCount = Trb.SectFile.ReadUInt32();
             var unknown = Trb.SectFile.ReadSingle();
             var unknown1 = Trb.SectFile.ReadUInt32();
