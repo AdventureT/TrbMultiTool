@@ -3,12 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:local="clr-namespace:TrbMultiTool"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
     <Grid>
         <ComboBox HorizontalAlignment="Left" Margin="554,128,0,0" VerticalAlignment="Top" Width="120" x:Name="ChooseGameComboBox" SelectionChanged="ChooseGameComboBox_SelectionChanged"/>
         <Button Content="Choose Trb file" HorizontalAlignment="Left" Margin="554,281,0,0" VerticalAlignment="Top" Width="104" x:Name="ChooseFileButton" Click="ChooseFileButton_Click"/>
+        <fa:ImageAwesome x:Name="loadingIcon" Icon="Spinner" Spin="True" Height="48" Width="48" Margin="581,346,171,40" Visibility="Hidden"/>
         <Image HorizontalAlignment="Left" Height="231" Margin="39,104,0,0" VerticalAlignment="Top" Width="449" x:Name="ImageBox" Stretch="Uniform"/>
     </Grid>
 </Window>

@@ -15,7 +15,13 @@ namespace TrbMultiTool
 		public static BinaryReader _f;
 		public static BinaryReader SectFile;
 		public static string _fileName;
-		public static Tsfl Tsfl { get; set; }
+        public bool finishedLoading = false;
+
+        public List<Ttex> ttexes = new();
+        public List<Ttl> ttls = new();
+        public List<Tmdl> tmdls = new();
+
+        public static Tsfl Tsfl { get; set; }
 
 		public Trb(string fileName, Game game)
 		{
@@ -31,8 +37,8 @@ namespace TrbMultiTool
 			SectFile = new BinaryReader(new MemoryStream(Tsfl.Sect.Data.ToArray()));
 			uint hdrx = 0;
 
-            var TTLWindow = new TtlWindow();
-            var TMDLWindow = new TmdlWindow();
+            //var TTLWindow = new TtlWindow();
+            //var TMDLWindow = new TmdlWindow();
 
             var groupByIds = Tsfl.Symb.NameEntries.GroupBy(e => e.ID); //Group by IDs
             foreach (var item in groupByIds)
@@ -42,12 +48,14 @@ namespace TrbMultiTool
                 if (item.FirstOrDefault().Name.Contains("FileHeader"))
                 {
                     var Tmdl = new Tmdl(item.ToList(), hdrx);
-                    TMDLWindow.AddTmdl(Tmdl);
+                    tmdls.Add(Tmdl);
+                    //TMDLWindow.AddTmdl(Tmdl);
                 }
                 else if (item.FirstOrDefault().Name.Contains("TTL"))
                 {
                     var Ttl = new Ttl(item.FirstOrDefault().DataOffset + hdrx, item.FirstOrDefault().Name);
-                    TTLWindow.AddTtl(Ttl);
+                    ttls.Add(Ttl);
+                    //TTLWindow.AddTtl(Ttl);
                 }
                 else if (item.FirstOrDefault().Name.Contains("Main"))
                 {
@@ -57,13 +65,15 @@ namespace TrbMultiTool
                 else if (item.FirstOrDefault().Name.Contains("ttex"))
                 {
                     SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
-                    TTLWindow.AddTtex(new Ttex(item.FirstOrDefault().DataOffset + hdrx));
+                    ttexes.Add(new Ttex(item.FirstOrDefault().DataOffset + hdrx));
+                    //TTLWindow.AddTtex();
                 }
             }
 
-			if (TTLWindow.Ttls.Any() || TTLWindow.Ttex.Any()) TTLWindow.Show();
-            if (TMDLWindow.Tmdls.Any()) TMDLWindow.Show();
+			//if (TTLWindow.Ttls.Any() || TTLWindow.Ttex.Any()) TTLWindow.Show();
+            //if (TMDLWindow.Tmdls.Any()) TMDLWindow.Show();
             _f.Close();
+            finishedLoading = true;
 		}
 	}
 }

@@ -35,6 +35,19 @@ namespace TrbMultiTool
             AddTtl(ttl);
         }
 
+        public TtlWindow(List<Ttl> ttls, List<Ttex> ttexes)
+        {
+            InitializeComponent();
+            foreach (var item in ttls)
+            {
+                AddTtl(item);
+            }
+            foreach (var item in ttexes)
+            {
+                AddTtex(item);
+            }
+        }
+
         public TtlWindow()
         {
             InitializeComponent();

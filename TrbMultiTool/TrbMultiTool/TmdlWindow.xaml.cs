@@ -30,6 +30,15 @@ namespace TrbMultiTool
             InitializeComponent();
         }
 
+        public TmdlWindow(List<Tmdl> tmdls)
+        {
+            InitializeComponent();
+            foreach (var item in tmdls)
+            {
+                AddTmdl(item);
+            }
+        }
+
         public void Move(double d)
         {
             double u = 0.05;
@@ -115,10 +124,44 @@ namespace TrbMultiTool
             var tmdl = tvi.Tag as Tmdl;
             myViewport.Children.Clear();
             modelName.Content = $"Opened Model: {Trb._safeFileName}";
-            foreach (var mv in tmdl.MVs)
+            var modelGroup = new Model3DGroup();
+            foreach (var item in tmdl.Mesh2)
             {
-                myViewport.Children.Add(mv);
+                var gm = new GeometryModel3D();
+                var mesh = new MeshGeometry3D
+                {
+                    Positions = new(item.Vertices),
+                    Normals = new(item.Normals),
+                    TextureCoordinates = new(item.Uvs),
+                    TriangleIndices = new(item.Faces)
+                };
+
+                gm.Geometry = mesh;
+                var diffuse = new DiffuseMaterial
+                {
+                    Brush = new SolidColorBrush(Color.FromRgb(166, 166, 166))
+                };
+                gm.Material = diffuse;
+
+                modelGroup.Children.Add(gm);
             }
+            var directionalLight = new DirectionalLight
+            {
+                Color = Color.FromRgb(255, 255, 255),
+                Direction = new Vector3D(-1, -1, -1)
+            };
+            var directionalLight2 = new DirectionalLight
+            {
+                Color = Color.FromRgb(255, 255, 255),
+                Direction = new Vector3D(5, 5, 5)
+            };
+            modelGroup.Children.Add(directionalLight);
+            modelGroup.Children.Add(directionalLight2);
+            var modelVisual = new ModelVisual3D
+            {
+                Content = modelGroup
+            };
+            myViewport.Children.Add(modelVisual);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
