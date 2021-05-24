@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TrbMultiTool": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

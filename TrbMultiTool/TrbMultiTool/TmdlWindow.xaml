@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TrbMultiTool"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance local:TmdlWindow, IsDesignTimeCreatable=True}"
         Title="TmdlWindow" Height="835" Width="915" KeyDown="Window_KeyDown" Closing="Window_Closing">
     <Grid>
 
@@ -25,6 +26,14 @@
 
         <StackPanel Grid.Column="1" Grid.Row="0">
             <Label Content="Opened Model: No Model" x:Name="modelName" Margin="15, 0" />
+            <ComboBox x:Name="cb">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=Description, Mode=OneWay}" ></TextBlock>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Content="Extract" Click="Button_Click"></Button>
             <!--<Label Content="Meshnames: " x:Name="meshName" Margin="15,0"/>
             <Label Content="Vertices: " x:Name="vertices" Margin="15, 0" />
             <Label Content="Faces: " x:Name="faces" Margin="15,0"/>-->

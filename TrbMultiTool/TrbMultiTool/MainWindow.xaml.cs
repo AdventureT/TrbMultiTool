@@ -82,16 +82,11 @@ namespace TrbMultiTool
 				DefaultExt = ".trb|.ttl",
 				Title = "Select a trb/ttl file"
 			};
-			//await loadingIcon.Dispatcher.BeginInvoke((Action)(() =>
-			//{
-			//	loadingIcon.Visibility = Visibility.Visible;
-			//}));
-			loadingIcon.Visibility = Visibility.Visible;
 			if ((bool)openFileDialog.ShowDialog())
 			{
+				loadingIcon.Visibility = Visibility.Visible;
 				var game = (Game)ChooseGameComboBox.SelectedIndex;
 				var trb = await Task.Run(() => new Trb(openFileDialog.FileName, game));
-				//var trb = await Dispatcher.InvokeAsync(() => new Trb(openFileDialog.FileName, (Game)ChooseGameComboBox.SelectedIndex));
                 if (trb.finishedLoading)
                 {
                     loadingIcon.Visibility = Visibility.Hidden;
@@ -102,15 +97,11 @@ namespace TrbMultiTool
 					}
 					if (trb.tmdls.Any())
                     {
-							var TMDLWindow = new TmdlWindow(trb.tmdls);
-							TMDLWindow.Show();
-                        
-					}
-					//await loadingIcon.Dispatcher.BeginInvoke((Action)(() =>
-					//{
-					//	loadingIcon.Visibility = Visibility.Hidden;
-					//}));
-				}
+                        var TMDLWindow = new TmdlWindow(trb.tmdls);
+                        TMDLWindow.Show();
+
+                    }
+                }
 			}
 
 		}

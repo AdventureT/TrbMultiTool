@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,12 +8,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using TrbMultiTool.FileFormats;
+
 
 namespace TrbMultiTool
 {
@@ -25,6 +28,10 @@ namespace TrbMultiTool
         const double rotationSpeed = speed * 6;
         public List<Tmdl> Tmdls { get; set; } = new();
 
+        public Assimp.AssimpContext Context { get; set; } = new Assimp.AssimpContext();
+
+        public ObservableCollection<Assimp.ExportFormatDescription> ExportFormats = new(new Assimp.AssimpContext().GetSupportedExportFormats());
+
         public TmdlWindow()
         {
             InitializeComponent();
@@ -33,6 +40,8 @@ namespace TrbMultiTool
         public TmdlWindow(List<Tmdl> tmdls)
         {
             InitializeComponent();
+            DataContext = this;
+            cb.ItemsSource = ExportFormats;
             foreach (var item in tmdls)
             {
                 AddTmdl(item);
@@ -78,7 +87,7 @@ namespace TrbMultiTool
             camera.LookDirection = m.Transform(camera.LookDirection);
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             switch (e.Key)
             {
@@ -125,16 +134,28 @@ namespace TrbMultiTool
             myViewport.Children.Clear();
             modelName.Content = $"Opened Model: {Trb._safeFileName}";
             var modelGroup = new Model3DGroup();
-            foreach (var item in tmdl.Mesh2)
+            foreach (var item in tmdl.Scene.Meshes)
             {
-                var gm = new GeometryModel3D();
-                var mesh = new MeshGeometry3D
+                var mesh = new MeshGeometry3D();
+                foreach (var vertex in item.Vertices)
                 {
-                    Positions = new(item.Vertices),
-                    Normals = new(item.Normals),
-                    TextureCoordinates = new(item.Uvs),
-                    TriangleIndices = new(item.Faces)
-                };
+                    mesh.Positions.Add(new(vertex.X, vertex.Y, vertex.Z));
+                }
+                foreach (var normal in item.Normals)
+                {
+                    mesh.Normals.Add(new(normal.X, normal.Y, normal.Z));
+                }
+                foreach (var uv in item.TextureCoordinateChannels.First())
+                {
+                    mesh.TextureCoordinates.Add(new(uv.X, uv.Y));
+                }
+                foreach (var face in item.Faces)
+                {
+                    mesh.TriangleIndices.Add(face.Indices[0]);
+                    mesh.TriangleIndices.Add(face.Indices[1]);
+                    mesh.TriangleIndices.Add(face.Indices[2]);
+                }
+                var gm = new GeometryModel3D();
 
                 gm.Geometry = mesh;
                 var diffuse = new DiffuseMaterial
@@ -174,6 +195,25 @@ namespace TrbMultiTool
         {
             var sI = (TreeViewItem)treeView.SelectedItem;
             LoadTmdl(sI);
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var exportFormat = cb.SelectedItem as Assimp.ExportFormatDescription;
+            var tmdl = ((TreeViewItem)treeView.SelectedItem).Tag as Tmdl;
+
+            var openFileDialog = new SaveFileDialog
+            {
+                Filter = $"{exportFormat.Description} (*{exportFormat.FileExtension})|*{exportFormat.FileExtension}",
+                DefaultExt = $"{exportFormat.FileExtension}",
+                Title = $"{exportFormat.Description}",
+                FileName = $"{System.IO.Path.GetFileNameWithoutExtension(tmdl.TmdlName)}"
+            };
+            
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                Context.ExportFile(tmdl.Scene, openFileDialog.FileName, exportFormat.FormatId);
+            }
         }
     }
 }
