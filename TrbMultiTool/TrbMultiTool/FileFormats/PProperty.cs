@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace TrbMultiTool.FileFormats
@@ -35,22 +36,26 @@ namespace TrbMultiTool.FileFormats
 
         public List<TypeContent> TypeContents { get; set; } = new();
 
-        public PPropertyWindow QuestWindow { get; set; } = new();
+        public PPropertyWindow QuestWindow { get; set; }
 
         public PProperty()
         {
-            Zero = Trb.SectFile.ReadInt32();
-            Offset = Trb.SectFile.ReadUInt32();
-            Count = Trb.SectFile.ReadUInt32();
-            Trb.SectFile.BaseStream.Seek(Offset, System.IO.SeekOrigin.Begin);
-            var tvi = new TreeViewItem
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Header = "Properties"
-            };
-            Item(Count, tvi);
-            QuestWindow.treeView.Items.Add(tvi);
-            QuestWindow.TypeContentss = TypeContents;
-            QuestWindow.Show();
+                QuestWindow = new();
+                Zero = Trb.SectFile.ReadInt32();
+                Offset = Trb.SectFile.ReadUInt32();
+                Count = Trb.SectFile.ReadUInt32();
+                Trb.SectFile.BaseStream.Seek(Offset, System.IO.SeekOrigin.Begin);
+                var tvi = new TreeViewItem
+                {
+                    Header = "Properties"
+                };
+                Item(Count, tvi);
+                QuestWindow.treeView.Items.Add(tvi);
+                QuestWindow.TypeContentss = TypeContents;
+                QuestWindow.Show();
+            });
         }
 
         private void Item(uint count, TreeViewItem prev)
