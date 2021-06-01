@@ -28,6 +28,10 @@ namespace TrbMultiTool
         const double rotationSpeed = speed * 6;
         public List<Tmdl> Tmdls { get; set; } = new();
 
+        public List<Ttex> Ttexes { get; set; } = new();
+
+        public List<Tmat> Tmats { get; set; } = new();
+
         public Assimp.AssimpContext Context { get; set; } = new Assimp.AssimpContext();
 
         public ObservableCollection<Assimp.ExportFormatDescription> ExportFormats = new(new Assimp.AssimpContext().GetSupportedExportFormats());
@@ -40,6 +44,19 @@ namespace TrbMultiTool
         public TmdlWindow(List<Tmdl> tmdls)
         {
             InitializeComponent();
+            DataContext = this;
+            cb.ItemsSource = ExportFormats;
+            foreach (var item in tmdls)
+            {
+                AddTmdl(item);
+            }
+        }
+
+        public TmdlWindow(List<Tmdl> tmdls, List<Ttex> ttexes, List<Tmat> tmats)
+        {
+            InitializeComponent();
+            Ttexes = ttexes;
+            Tmats = tmats;
             DataContext = this;
             cb.ItemsSource = ExportFormats;
             foreach (var item in tmdls)
@@ -201,7 +218,17 @@ namespace TrbMultiTool
         {
             var exportFormat = cb.SelectedItem as Assimp.ExportFormatDescription;
             var tmdl = ((TreeViewItem)treeView.SelectedItem).Tag as Tmdl;
-
+            //var test = tmdl.Scene.Meshes.Where(x => x.Name.ToLower() == Tmats.Where(y => y.MeshName.ToLower() == x.Name.ToLower()).Select(y => y.MeshName.ToLower()).First());
+            //int x = 0;
+            //foreach (var item in test)
+            //{
+            //    var tmatTexture = Ttexes.Where(x => x.TextureName == Tmats.Where(y => y.MeshName.ToLower() == item.Name.ToLower()).Select(y => y.TextureName.ToLower()).First()).First();
+            //    tmdl.Scene.Textures.Add(new("dds\0", tmatTexture.RawImage));
+            //    var mat = new Assimp.Material();
+            //    mat.AddProperty(new(tmatTexture.TextureName, "1", Assimp.TextureType.Diffuse, 0));
+            //    tmdl.Scene.Materials.Add(mat); //You need a default material!!!!! Cost me 5 hours of figguring out on how to debug native dlls aaaggh
+            //    item.MaterialIndex = x++;
+            //}
             var openFileDialog = new SaveFileDialog
             {
                 Filter = $"{exportFormat.Description} (*{exportFormat.FileExtension})|*{exportFormat.FileExtension}",

@@ -20,6 +20,7 @@ namespace TrbMultiTool
         public List<Ttex> ttexes = new();
         public List<Ttl> ttls = new();
         public List<Tmdl> tmdls = new();
+        public List<Tmat> tmats = new();
 
         public static Tsfl Tsfl { get; set; }
 
@@ -55,7 +56,6 @@ namespace TrbMultiTool
                 {
                     var Ttl = new Ttl(item.FirstOrDefault().DataOffset + hdrx, item.FirstOrDefault().Name);
                     ttls.Add(Ttl);
-                    //TTLWindow.AddTtl(Ttl);
                 }
                 else if (item.FirstOrDefault().Name.Contains("Main"))
                 {
@@ -66,12 +66,13 @@ namespace TrbMultiTool
                 {
                     SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
                     ttexes.Add(new Ttex(item.FirstOrDefault().DataOffset + hdrx));
-                    //TTLWindow.AddTtex();
+                }
+                else if (item.FirstOrDefault().Name.Contains("tmat"))
+                {
+                    SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
+                    tmats.Add(new Tmat(item.FirstOrDefault().DataOffset + hdrx));
                 }
             }
-
-			//if (TTLWindow.Ttls.Any() || TTLWindow.Ttex.Any()) TTLWindow.Show();
-            //if (TMDLWindow.Tmdls.Any()) TMDLWindow.Show();
             _f.Close();
             finishedLoading = true;
 		}

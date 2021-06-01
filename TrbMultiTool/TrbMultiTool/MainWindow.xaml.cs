@@ -95,9 +95,9 @@ namespace TrbMultiTool
 						var TTLWindow = new TtlWindow(trb.ttls, trb.ttexes);
 						TTLWindow.Show();
 					}
-					if (trb.tmdls.Any())
+					if (trb.tmdls.Any() && trb.ttexes.Any() && trb.tmats.Any())
                     {
-                        var TMDLWindow = new TmdlWindow(trb.tmdls);
+                        var TMDLWindow = new TmdlWindow(trb.tmdls, trb.ttexes, trb.tmats);
                         TMDLWindow.Show();
 
                     }

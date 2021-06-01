@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -85,14 +86,15 @@ namespace TrbMultiTool.FileFormats
                 CreateModelDeBlob(hdrx, nameEntry.Find(x => x.Name.Contains("tmod")));
             }
 
-            AssimpContext context = new();
+            //Scene.RootNode.Transform = new Matrix4x4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
 
             for (int ob = 0; ob < Scene.MeshCount; ob++)
             {
                 Scene.RootNode.MeshIndices.Add(ob);
             }
-            
+
             Scene.Materials.Add(new Material()); //You need a default material!!!!! Cost me 5 hours of figguring out on how to debug native dlls aaaggh
+
         }
 
         private void CreateModelDeBlob(uint hdrx, Symb.NameEntry meshEntry)
@@ -120,11 +122,8 @@ namespace TrbMultiTool.FileFormats
             {
                 meshInfoOffsets.Add(Trb.SectFile.ReadUInt32());
             }
-            int x = 0;
             foreach (var item in meshInfoOffsets)
             {
-                
-
                 Trb.SectFile.BaseStream.Seek(item + hdrx, System.IO.SeekOrigin.Begin);
                 var zero = Trb.SectFile.ReadUInt32();
                 var one = Trb.SectFile.ReadUInt32();
@@ -132,7 +131,7 @@ namespace TrbMultiTool.FileFormats
                 var unknown2 = Trb.SectFile.ReadUInt32();
                 var meshName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + hdrx);
                 var meshSubInfoOffset = Trb.SectFile.ReadUInt32();
-
+                Debug.WriteLine(meshName);
                 Mesh mesh = new(meshName, PrimitiveType.Triangle);
                 Trb.SectFile.BaseStream.Seek(meshSubInfoOffset + hdrx, System.IO.SeekOrigin.Begin);
                 var vertexCount = Trb.SectFile.ReadUInt32();
@@ -150,7 +149,7 @@ namespace TrbMultiTool.FileFormats
                     mesh.Vertices.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
                     mesh.Normals.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
                     Trb.SectFile.BaseStream.Seek(8, System.IO.SeekOrigin.Current);
-                    uvs.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), 0));
+                    uvs.Add(new Vector3D(Trb.SectFile.ReadSingle(), -Trb.SectFile.ReadSingle(), 0));
                     Trb.SectFile.BaseStream.Seek(4, System.IO.SeekOrigin.Current);
                 }
                 Trb.SectFile.BaseStream.Seek(faceOffset + hdrx, System.IO.SeekOrigin.Begin);
@@ -159,7 +158,7 @@ namespace TrbMultiTool.FileFormats
                     mesh.Faces.Add(new Face(new int[] { Trb.SectFile.ReadUInt16(), Trb.SectFile.ReadUInt16(), Trb.SectFile.ReadUInt16() }));
                 }
                 mesh.TextureCoordinateChannels.SetValue(uvs, 0);
-                mesh.MaterialIndex = 0; //!!!
+                mesh.MaterialIndex = 0;
                 Scene.Meshes.Add(mesh);
             }
         }
@@ -192,7 +191,7 @@ namespace TrbMultiTool.FileFormats
                     mesh.Vertices.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
                     mesh.Normals.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
                     Trb.SectFile.BaseStream.Seek(8, System.IO.SeekOrigin.Current);
-                    uvs.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), 0));
+                    uvs.Add(new Vector3D(Trb.SectFile.ReadSingle(), -Trb.SectFile.ReadSingle(), 0));
                 }
                 Trb.SectFile.BaseStream.Seek(meshInfos[i].faceOffset + hdrx, System.IO.SeekOrigin.Begin);
                 int startDirection = -1;
