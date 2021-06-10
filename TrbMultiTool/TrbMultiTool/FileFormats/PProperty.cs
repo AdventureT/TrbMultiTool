@@ -121,10 +121,7 @@ namespace TrbMultiTool.FileFormats
             var playerSubInfos = new List<SubInfo>();
             for (int i = 0; i < playerInfo.SubInfoOffsetCount; i++)
             {
-                Type type = (Type)Trb.SectFile.ReadUInt32();
-                uint valuePointer = (uint)Trb.SectFile.BaseStream.Position;
-
-                playerSubInfos.Add(new SubInfo(type, Trb.SectFile.ReadUInt32(), valuePointer));
+                playerSubInfos.Add(new SubInfo((Type)Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), (uint)Trb.SectFile.BaseStream.Position - 4));
             }
 
             long lastPosition = Trb.SectFile.BaseStream.Position;
@@ -149,7 +146,6 @@ namespace TrbMultiTool.FileFormats
                     }
                 };
 
-                //MessageBox.Show(ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value), ((TypeContent)(tvi.Tag)).Offset.ToString());
                 TypeContents.Add((TypeContent)tvi.Tag);
                 prev.Items.Add(tvi);
             }

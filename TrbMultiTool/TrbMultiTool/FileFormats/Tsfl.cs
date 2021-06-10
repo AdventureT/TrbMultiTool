@@ -15,7 +15,6 @@
 			Sect = new();
 			Relc = new();
 			Symb = new();
-
 		}
 	}
 }

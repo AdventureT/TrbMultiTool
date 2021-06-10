@@ -24,13 +24,13 @@ namespace TrbMultiTool
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+        private TSFLFileDialog fileDialog = new();
 
 		public MainWindow()
 		{
 			InitializeComponent();
 			AddGamesToComboBox();
 		}
-
 
 		private void AddGamesToComboBox()
 		{
@@ -76,34 +76,42 @@ namespace TrbMultiTool
 
         private async void ChooseFileButton_Click(object sender, RoutedEventArgs e)
 		{
-			var openFileDialog = new OpenFileDialog
-			{
-				Filter = "TRB Files (*.trb)|*.trb|TTL files (*.ttl)|*.ttl",
-				DefaultExt = ".trb|.ttl",
-				Title = "Select a trb/ttl file"
-			};
-			if ((bool)openFileDialog.ShowDialog())
+			if (fileDialog.Open())
 			{
 				loadingIcon.Visibility = Visibility.Visible;
 				var game = (Game)ChooseGameComboBox.SelectedIndex;
-				var trb = await Task.Run(() => new Trb(openFileDialog.FileName, game));
+				var trb = await Task.Run(() => new Trb(fileDialog.fileName, game));
+
                 if (trb.finishedLoading)
                 {
                     loadingIcon.Visibility = Visibility.Hidden;
+
 					if (trb.ttls.Any() || trb.ttexes.Any())
                     {
 						var TTLWindow = new TtlWindow(trb.ttls, trb.ttexes);
 						TTLWindow.Show();
 					}
+
 					if (trb.tmdls.Any() && trb.ttexes.Any() && trb.tmats.Any())
                     {
                         var TMDLWindow = new TmdlWindow(trb.tmdls, trb.ttexes, trb.tmats);
                         TMDLWindow.Show();
-
                     }
                 }
 			}
+		}
 
+        private async void ExtractFileButton_Click(object sender, RoutedEventArgs e)
+        {
+			if (fileDialog.Open())
+			{
+				loadingIcon.Visibility = Visibility.Visible;
+				var game = (Game)ChooseGameComboBox.SelectedIndex;
+				var trb = await Task.Run(() => new Trb(fileDialog.fileName, game, true));
+
+				if (trb.finishedLoading)
+					loadingIcon.Visibility = Visibility.Hidden;
+			}
 		}
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

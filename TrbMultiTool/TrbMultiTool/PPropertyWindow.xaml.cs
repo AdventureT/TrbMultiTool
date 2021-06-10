@@ -34,13 +34,31 @@ namespace TrbMultiTool
             }
         }
 
-        private void textBox_TextChanged(object sender, TextChangedEventArgs e)
+        private bool CheckBTEC()
         {
+            if (Trb.Tsfl.Sect.Label == "SECC")
+            {
+                MessageBox.Show("This file is BTEC encoded, so you should decode it before editing", "BTEC File Warning");
+                return false;
+            }
 
+            return true;
+        }
+
+        private void swapButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!CheckBTEC() || comboBox.SelectedIndex == -1) return;
+            var typeContentCb = TypeContentsWithString[comboBox.SelectedIndex];
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+            var tag = tvi.Tag as TypeContent;
+            using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
+            writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + tag.PointerPos, SeekOrigin.Begin);
+            writer.Write((uint)typeContentCb.Offset);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            if (!CheckBTEC()) return;
             var tvi = (TreeViewItem)treeView.SelectedItem;
             var tag = tvi.Tag as TypeContent;
             using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
@@ -87,22 +105,6 @@ namespace TrbMultiTool
                 default:
                     break;
             }
-        }
-
-        private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            
-        }
-
-        private void swapButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (comboBox.SelectedIndex == -1) return;
-            var typeContentCb = TypeContentsWithString[comboBox.SelectedIndex];
-            var tvi = (TreeViewItem)treeView.SelectedItem;
-            var tag = tvi.Tag as TypeContent;
-            using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
-            writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + tag.PointerPos, SeekOrigin.Begin);
-            writer.Write((uint)typeContentCb.Offset);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
