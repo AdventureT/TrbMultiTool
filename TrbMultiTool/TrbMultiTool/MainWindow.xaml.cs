@@ -92,9 +92,9 @@ namespace TrbMultiTool
 						TTLWindow.Show();
 					}
 
-					if (trb.tmdls.Any() && trb.ttexes.Any() && trb.tmats.Any())
+					if (trb.tmdls.Any())
                     {
-                        var TMDLWindow = new TmdlWindow(trb.tmdls, trb.ttexes, trb.tmats);
+                        var TMDLWindow = new TmdlWindow(trb.tmdls);
                         TMDLWindow.Show();
                     }
                 }
