@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace TrbMultiTool.FileFormats
 {
 	public class Sect : Tag
 	{
-		public long Offset { get; set; }
 		public List<byte> Data { get; set; } = new();
         public Sect() : base()
 		{
@@ -22,6 +23,7 @@ namespace TrbMultiTool.FileFormats
 					padding++;
 					tempSize++;
                 }
+
 				Trb._f.BaseStream.Seek(Offset + Size + padding, SeekOrigin.Begin);
 			}
             else
