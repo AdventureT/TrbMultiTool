@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -14,7 +10,7 @@ namespace TrbMultiTool.FileFormats
         public uint Offset { get; set; }
         public uint Count { get; set; }
         public record Info(uint Offset1, uint Offset2);
-        record SubInfo(Type Type, uint Value);
+        record SubInfo(Type Type, uint Value, uint ValuePointer);
         record SubSubInfo(uint Offset1, uint Offset2, uint Offset2Count);
 
         record PlayerInfo(uint SubInfoOffset, uint SubInfoOffsetCount);
@@ -76,7 +72,7 @@ namespace TrbMultiTool.FileFormats
                 };
 
                 Trb.SectFile.BaseStream.Seek(info.Offset2, System.IO.SeekOrigin.Begin);
-                var subInfo = new SubInfo((Type)Trb.SectFile.ReadUInt32(), 0);
+                var subInfo = new SubInfo((Type)Trb.SectFile.ReadUInt32(), 0, 0);
 
                 uint textOffset = 0;
                 if (subInfo.Type == Type.String) textOffset = Trb.SectFile.ReadUInt32();
@@ -98,6 +94,7 @@ namespace TrbMultiTool.FileFormats
                     Type.UInt => new TypeContent(Type.UInt, Trb.SectFile.ReadUInt32().ToString(), Trb.SectFile.BaseStream.Position - 4),
                     _ => $"Type {subInfo.Type} hasn't been implemented yet",
                 };
+
                 TypeContents.Add((TypeContent)tvi.Tag);
                 prev.Items.Add(tvi);
             }
@@ -124,8 +121,14 @@ namespace TrbMultiTool.FileFormats
             var playerSubInfos = new List<SubInfo>();
             for (int i = 0; i < playerInfo.SubInfoOffsetCount; i++)
             {
-                playerSubInfos.Add(new SubInfo((Type)Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32()));
+                Type type = (Type)Trb.SectFile.ReadUInt32();
+                uint valuePointer = (uint)Trb.SectFile.BaseStream.Position;
+
+                playerSubInfos.Add(new SubInfo(type, Trb.SectFile.ReadUInt32(), valuePointer));
             }
+
+            long lastPosition = Trb.SectFile.BaseStream.Position;
+
             foreach (var playerSubInfo in playerSubInfos)
             {
                 var tvi = new TreeViewItem
@@ -140,14 +143,19 @@ namespace TrbMultiTool.FileFormats
                     Tag = playerSubInfo.Type switch
                     {
                         //string
-                        Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value), playerSubInfo.Value, Trb.SectFile.BaseStream.Position - 4),
-                        Type.Int => new TypeContent(Type.Int, playerSubInfo.Value.ToString(), Trb.SectFile.BaseStream.Position - 4),
+                        Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value), playerSubInfo.Value, playerSubInfo.ValuePointer),
+                        Type.Int => new TypeContent(Type.Int, playerSubInfo.Value.ToString(), playerSubInfo.ValuePointer),
                         _ => new TypeContent(Type.String, $"Type {playerSubInfo.Type} hasn't been implemented yet", 0, 0) ,
                     }
                 };
+
+                //MessageBox.Show(ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value), ((TypeContent)(tvi.Tag)).Offset.ToString());
                 TypeContents.Add((TypeContent)tvi.Tag);
                 prev.Items.Add(tvi);
             }
+
+            Trb.SectFile.BaseStream.Seek(lastPosition, System.IO.SeekOrigin.Begin);
+
             return new TypeContent(Type.String, "SubProperty", 0);
         }
     }

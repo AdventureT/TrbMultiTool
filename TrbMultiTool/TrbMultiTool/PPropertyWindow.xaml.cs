@@ -2,16 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using TrbMultiTool.FileFormats;
 using static TrbMultiTool.FileFormats.PProperty;
 
@@ -52,27 +44,27 @@ namespace TrbMultiTool
             var tvi = (TreeViewItem)treeView.SelectedItem;
             var tag = tvi.Tag as TypeContent;
             using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
-            writer.BaseStream.Seek(tag.Offset, SeekOrigin.Begin);
+            writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + tag.Offset, SeekOrigin.Begin);
             switch (tag.Type)
             {
-                case FileFormats.PProperty.Type.Int:
+                case PProperty.Type.Int:
                     writer.Write(Convert.ToUInt32(textBox.Text));
                     break;
-                case FileFormats.PProperty.Type.Unknown:
+                case PProperty.Type.Unknown:
                     break;
-                case FileFormats.PProperty.Type.Float:
+                case PProperty.Type.Float:
                     writer.Write(Convert.ToSingle(textBox.Text));
                     break;
-                case FileFormats.PProperty.Type.Bool:
+                case PProperty.Type.Bool:
                     writer.Write(Convert.ToBoolean(textBox.Text) ? 1 : 0);
                     break;
-                case FileFormats.PProperty.Type.SubItem:
+                case PProperty.Type.SubItem:
                     break;
-                case FileFormats.PProperty.Type.Unknown2:
+                case PProperty.Type.Unknown2:
                     break;
-                case FileFormats.PProperty.Type.Player:
+                case PProperty.Type.Player:
                     break;
-                case FileFormats.PProperty.Type.String:
+                case PProperty.Type.String:
                     if (textBox.Text.Length > tag.Value.Length)
                     {
                         MessageBox.Show("Your inputted string is too large!");
@@ -89,7 +81,7 @@ namespace TrbMultiTool
                         writer.Write(charArr);
                     }
                     break;
-                case FileFormats.PProperty.Type.UInt:
+                case PProperty.Type.UInt:
                     writer.Write(Convert.ToUInt32(textBox.Text));
                     break;
                 default:
@@ -104,12 +96,13 @@ namespace TrbMultiTool
 
         private void swapButton_Click(object sender, RoutedEventArgs e)
         {
+            if (comboBox.SelectedIndex == -1) return;
             var typeContentCb = TypeContentsWithString[comboBox.SelectedIndex];
             var tvi = (TreeViewItem)treeView.SelectedItem;
             var tag = tvi.Tag as TypeContent;
             using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
-            writer.BaseStream.Seek(tag.PointerPos, SeekOrigin.Begin);
-            writer.Write((uint)typeContentCb.Offset - (uint)Trb.Tsfl.Sect.Offset);
+            writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + tag.PointerPos, SeekOrigin.Begin);
+            writer.Write((uint)typeContentCb.Offset);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
