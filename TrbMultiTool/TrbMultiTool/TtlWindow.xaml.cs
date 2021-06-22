@@ -130,12 +130,13 @@ namespace TrbMultiTool
 
             if (wholeName.Length > 1) 
             {
-                dirName = wholeName.First();
+                //Array.Resize(ref wholeName, dirName.Length - 1);
+                dirName = string.Join('\\', wholeName.Take(wholeName.Length - 1));
 
                 Directory.CreateDirectory(path + "\\" + dirName);
             }
 
-            fileName = wholeName.Last().Remove(wholeName[1].Length - 4) + ".dds";
+            fileName = wholeName.Last().Remove(wholeName.Last().Length - 4) + ".dds";
 
             // Write the dds file
             using BinaryWriter writer = new(File.Open($"{path}\\{dirName}\\{fileName}", FileMode.Create));
