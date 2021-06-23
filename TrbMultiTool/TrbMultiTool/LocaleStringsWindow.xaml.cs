@@ -33,20 +33,6 @@ namespace TrbMultiTool
             idField.Text = lS.id.ToString();
         }
 
-        public static byte[] GetUnicodeStringBytes(string str)
-        {
-            List<byte> bytes = new List<byte>();
-
-            for (int i = 0; i < str.Length; i++)
-            {
-                bytes.Add((byte)str[i]);
-                bytes.Add(0x0);
-            }
-
-            bytes.Add(0x0);
-            return bytes.ToArray();
-        }
-
         public void SearchForItem()
         {
             int targetID = Convert.ToInt32(idSearchField.Text);
@@ -81,7 +67,7 @@ namespace TrbMultiTool
             Trb.SectFile.BaseStream.Seek(lS.offset, SeekOrigin.Begin);
             using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
             writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + lS.offset, SeekOrigin.Begin);
-            writer.Write(GetUnicodeStringBytes(textField.Text));
+            writer.Write(Encoding.Unicode.GetBytes(textField.Text));
 
             writer.Close();
             sI.Content = textField.Text;
