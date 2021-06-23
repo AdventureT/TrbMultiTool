@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,6 +17,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using TrbMultiTool;
+using TrbMultiTool.FileFormats;
 
 namespace TrbMultiTool
 {
@@ -103,7 +105,7 @@ namespace TrbMultiTool
 
         private async void ExtractFileButton_Click(object sender, RoutedEventArgs e)
         {
-			if (fileDialog.Open())
+		if (fileDialog.Open())
 			{
 				loadingIcon.Visibility = Visibility.Visible;
 				var game = (Game)ChooseGameComboBox.SelectedIndex;
@@ -118,5 +120,32 @@ namespace TrbMultiTool
         {
 			Environment.Exit(0);
         }
+
+        private void createLocaleFile_Click(object sender, RoutedEventArgs e)
+        {
+			LocaleStringsFile file = new();
+			OpenFileDialog fd = new();
+			fd.FileName = "LocaleStrings.txt";
+			fd.Filter = $"Text File|*.txt";
+
+			if (fd.ShowDialog() == true && !string.IsNullOrWhiteSpace(fd.FileName))
+            {
+				Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+				dlg.FileName = "eng-uk.trb";
+				dlg.Filter = $"TRB File|*.trb";
+
+				if (dlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(dlg.FileName))
+                {
+					string[] lines = File.ReadAllLines(fd.FileName);
+
+					foreach (string str in lines)
+					{
+						file.AddString(str.Replace("\\n", "\n"));
+					}
+
+					file.GenerateFile(dlg.FileName);
+				}
+            }
+		}
     }
 }

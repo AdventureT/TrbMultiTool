@@ -108,7 +108,7 @@ namespace TrbMultiTool
                     foreach (ListViewItem item in ListView.Items)
                     {
                         LocaleString lS = (LocaleString)item.Tag;
-                        writer.WriteLine(lS.text);
+                        writer.WriteLine(lS.text.Replace("\n", "\\n"));
                     }
 
                     writer.Close();
