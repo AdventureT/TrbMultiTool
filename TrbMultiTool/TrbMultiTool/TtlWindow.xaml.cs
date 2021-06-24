@@ -123,37 +123,53 @@ namespace TrbMultiTool
             LoadTtl(sI);
         }
 
+        private void ExtractFile(string path, string[] wholeName, byte[] rawImage)
+        {
+            string dirName = "";
+            string fileName;
+
+            if (wholeName.Length > 1) 
+            {
+                //Array.Resize(ref wholeName, dirName.Length - 1);
+                dirName = string.Join('\\', wholeName.Take(wholeName.Length - 1));
+
+                Directory.CreateDirectory(path + "\\" + dirName);
+            }
+
+            fileName = wholeName.Last().Remove(wholeName.Last().Length - 4) + ".dds";
+
+            // Write the dds file
+            using BinaryWriter writer = new(File.Open($"{path}\\{dirName}\\{fileName}", FileMode.Create));
+            writer.Write(rawImage);
+        }
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            if (treeView.SelectedItem == null) return;
             var sI = (TreeViewItem)treeView.SelectedItem;
-            if (sI.Tag is Ttl) return; //TODO extract whole TTL
 
-            using var fbd = new FolderBrowserDialog();
+            var fbd = new FolderBrowserDialog();
             DialogResult result = fbd.ShowDialog();
+
+            string path = fbd.SelectedPath;
+
+            if (sI.Tag is Ttl)
+            {
+                Ttl ttl = (Ttl)sI.Tag;
+
+                for (int i = 0; i < ttl.TextureInfoCount; i++)
+                {
+                    TextureInfo tInfo = ttl.TextureInfos[i];
+                    ExtractFile(path, ttl.TextureInfos[i].FileName.Split('\\'), tInfo.RawImage);
+                }
+
+                return;
+            };
 
             if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
             {
-                var wholeName = sI.Tag is Ttex ttex ? ttex.TextureName.Split('\\') : ((TextureInfo)sI.Tag).FileName.Split('\\');
-                var dirName = "";
-                var fileName = "";
-                if (wholeName.Length > 1) // Create Directory
-                {
-                    dirName = wholeName.First();
-                    if (!Directory.Exists(fbd.SelectedPath + "\\" + dirName))
-                    {
-                        Directory.CreateDirectory(fbd.SelectedPath + "\\" + dirName);
-                    }
-                    fileName = wholeName[1].Remove(wholeName[1].Length - 4) + ".dds";
-                }
-                else // No Directory
-                {
-                    fileName = wholeName.First().Remove(wholeName.First().Length - 4) + ".dds";
-                }
-
-                // Write the dds file
-                using BinaryWriter writer = new(File.Open($"{fbd.SelectedPath}\\{dirName}\\{fileName}", FileMode.Create));
-                if (sI.Tag is Ttex) writer.Write(((Ttex)sI.Tag).RawImage);
-                else writer.Write(((TextureInfo)sI.Tag).RawImage);
+                if (sI.Tag is Ttex) ExtractFile(path, ((Ttex)sI.Tag).TextureName.Split("\\"), ((Ttex)sI.Tag).RawImage);
+                else ExtractFile(path, ((TextureInfo)sI.Tag).FileName.Split("\\"), ((TextureInfo)sI.Tag).RawImage);
             }
         }
     }

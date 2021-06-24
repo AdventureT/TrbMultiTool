@@ -79,6 +79,11 @@ namespace TrbMultiTool
                         SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
                         tmats.Add(new Tmat(item.FirstOrDefault().DataOffset + hdrx));
                     }
+                    else if (item.FirstOrDefault().Name.Contains("LocaleStrings"))
+                    {
+                        SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
+                        var LocaleStrings = new LocaleStrings();
+                    }
                 }
             }
             else if (onlyExtract && Tsfl.Sect.Label == "SECC")

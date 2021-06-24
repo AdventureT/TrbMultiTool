@@ -13,5 +13,6 @@
         <fa:ImageAwesome x:Name="loadingIcon" Icon="Spinner" Spin="True" Height="48" Width="48" Margin="581,346,171,40" Visibility="Hidden"/>
         <Image HorizontalAlignment="Left" Height="231" Margin="39,104,0,0" VerticalAlignment="Top" Width="449" x:Name="ImageBox" Stretch="Uniform"/>
         <Button Content="Extract BTEC" HorizontalAlignment="Left" Margin="500,165,0,0" VerticalAlignment="Top" Width="271" x:Name="ExtractFileButton" Click="ExtractFileButton_Click" Height="25"/>
+        <Button Content="Create LocaleStrings file" HorizontalAlignment="Left" Margin="500,210,0,0" VerticalAlignment="Top" Width="271" x:Name="createLocaleFile" Height="25" Click="createLocaleFile_Click"/>
     </Grid>
 </Window>

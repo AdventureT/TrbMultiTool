@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TrbMultiTool"
         mc:Ignorable="d"
         UseLayoutRounding="True"
-        Title="TtlWindow" Height="647" Width="1314">
+        Title="TtlWindow" Height="665" Width="1332">
     <Grid>
         <TreeView Margin="0,0,1129,0" x:Name="treeView" SelectedItemChanged="treeView_SelectedItemChanged">
 
