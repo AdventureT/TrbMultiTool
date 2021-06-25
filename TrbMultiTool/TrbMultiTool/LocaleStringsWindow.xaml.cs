@@ -28,7 +28,6 @@ namespace TrbMultiTool
 
         void Update(LocaleString lS)
         {
-            textField.MaxLength = lS.text.Length;
             textField.Text = lS.text;
             idField.Text = lS.id.ToString();
         }
@@ -49,6 +48,33 @@ namespace TrbMultiTool
             }
         }
 
+        public void SaveFile(string path)
+        {
+            LocaleStringsFile file = new();
+
+            foreach (ListViewItem item in ListView.Items)
+            {
+                file.AddString(item.Content.ToString());
+            }
+
+            file.GenerateFile(path);
+
+            MessageBox.Show("Done!");
+        }
+
+        public void ApplyText()
+        {
+            ListViewItem sI = (ListViewItem)ListView.SelectedItem;
+            if (sI == null) return;
+
+            LocaleString lS = (LocaleString)sI.Tag;
+
+            sI.Content = textField.Text;
+            lS.text = textField.Text;
+
+            Update(lS);
+        }
+
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ListViewItem sI = (ListViewItem)ListView.SelectedItem;
@@ -60,19 +86,13 @@ namespace TrbMultiTool
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            ListViewItem sI = (ListViewItem)ListView.SelectedItem;
-            if (sI == null) return;
+            ApplyText();
+            //Trb.SectFile.BaseStream.Seek(lS.offset, SeekOrigin.Begin);
+            //using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
+            //writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + lS.offset, SeekOrigin.Begin);
+            //writer.Write(Encoding.Unicode.GetBytes(textField.Text));
 
-            LocaleString lS = (LocaleString)sI.Tag;
-            Trb.SectFile.BaseStream.Seek(lS.offset, SeekOrigin.Begin);
-            using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
-            writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + lS.offset, SeekOrigin.Begin);
-            writer.Write(Encoding.Unicode.GetBytes(textField.Text));
-
-            writer.Close();
-            sI.Content = textField.Text;
-            lS.text = textField.Text;
-            Update(lS);
+            //writer.Close();
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
@@ -97,6 +117,7 @@ namespace TrbMultiTool
 
         private void Button_Click_3(object sender, RoutedEventArgs e)
         {
+            // Export
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
             dlg.FileName = "LocaleStrings.txt";
             dlg.Filter = $"Text File|*.txt";
@@ -114,6 +135,29 @@ namespace TrbMultiTool
                     writer.Close();
                 }
             }
+        }
+
+        private void Button_Click_4(object sender, RoutedEventArgs e)
+        {
+            // Save
+            SaveFile(Trb._fileName);
+        }
+
+        private void Button_Click_5(object sender, RoutedEventArgs e)
+        {
+            // Save as
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "eng.trb";
+            dlg.Filter = $"TRB File|*.trb";
+
+            if (dlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(dlg.FileName))
+                SaveFile(dlg.FileName);
+        }
+
+        private void textField_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                ApplyText();
         }
     }
 }
