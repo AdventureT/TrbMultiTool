@@ -16,9 +16,11 @@ namespace TrbMultiTool.FileFormats
 
     class LocaleStringsFile
     {
+        uint totalData = 0;
         const int DATA_MARGIN = 12;
         const int TEXT_MARGIN = 2;
         List<string> strings = new();
+        BinaryWriter binaryWriter;
 
         private byte[] GetStringBytes(string str)
         {
@@ -30,9 +32,25 @@ namespace TrbMultiTool.FileFormats
             return Encoding.Unicode.GetBytes(str);
         }
 
+        private int WriteString(ref List<LocaleString> stringsInfos, string str)
+        {
+            LocaleString lS = new();
+            lS.text = str;
+            lS.offset = totalData;
+
+            byte[] uBytes = GetUnicodeStringBytes(str);
+            binaryWriter.Write(uBytes);
+            binaryWriter.Seek(TEXT_MARGIN, SeekOrigin.Current);
+
+            totalData += (uint)(uBytes.Length + TEXT_MARGIN);
+            stringsInfos.Add(lS);
+
+            return str.Length + 1;
+        }
+
         public void GenerateFile(string path)
         {
-            BinaryWriter binaryWriter = new(File.Open(path, FileMode.Create));
+            binaryWriter = new(File.Open(path, FileMode.Create));
 
             // TSFL
             binaryWriter.Write(GetStringBytes("TSFL"));
@@ -57,24 +75,18 @@ namespace TrbMultiTool.FileFormats
             binaryWriter.Write(GetStringBytes("SECT"));
             binaryWriter.Write(0); // Size of SECT
             int sectPos = (int)binaryWriter.BaseStream.Position;
-            LocaleString[] stringsInfos = new LocaleString[strings.Count];
+            List<LocaleString> stringsInfos = new();
 
             // Write strings
-            int i = 0;
-            uint totalData = 0;
+            int stringsLen = 0;
             foreach (string str in strings)
             {
-                LocaleString lS = new();
-                lS.text = str;
-                lS.offset = totalData;
-
-                byte[] uBytes = GetUnicodeStringBytes(str);
-                binaryWriter.Write(uBytes);
-                binaryWriter.Seek(TEXT_MARGIN, SeekOrigin.Current);
-
-                totalData += (uint)(uBytes.Length + TEXT_MARGIN);
-                stringsInfos[i++] = lS;
+                stringsLen += WriteString(ref stringsInfos, str);
             }
+
+            // Check if data length is not even and make it even
+            if (stringsLen % 2 != 0)
+                WriteString(ref stringsInfos, "");
 
             binaryWriter.Seek(DATA_MARGIN, SeekOrigin.Current); // Make a margin between strings and it's offsets
             totalData += DATA_MARGIN;
@@ -104,7 +116,7 @@ namespace TrbMultiTool.FileFormats
             binaryWriter.Write(GetStringBytes("RELC"));
             binaryWriter.Write(0); // Size of RELC
             int relcPos = (int)binaryWriter.BaseStream.Position;
-            binaryWriter.Write(stringsInfos.Length + 1); // Count of strings + offset to data size
+            binaryWriter.Write(stringsInfos.Count + 1); // Count of strings + offset to data size
 
             foreach (uint pointer in pointersToOffsets)
             {
@@ -185,6 +197,8 @@ namespace TrbMultiTool.FileFormats
 
                     window.ListView.Items.Add(item);
                 }
+
+                window.ListView.Items.RemoveAt(window.ListView.Items.Count - 1);
 
                 window.Show();
             });
