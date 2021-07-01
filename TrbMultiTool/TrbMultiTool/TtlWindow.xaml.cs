@@ -172,5 +172,31 @@ namespace TrbMultiTool
                 else ExtractFile(path, ((TextureInfo)sI.Tag).FileName.Split("\\"), ((TextureInfo)sI.Tag).RawImage);
             }
         }
+
+        private void Extract_Everything_Button_Clicked(object sender, RoutedEventArgs e)
+        {
+            var fbd = new FolderBrowserDialog();
+            DialogResult result = fbd.ShowDialog();
+            string path = fbd.SelectedPath;
+            if (Ttex.Count > 0)
+            {
+                foreach (var ttex in Ttex)
+                {
+                    ExtractFile(path, new[] { ttex.TextureName }, ttex.RawImage);
+                }
+            }
+            else
+            {
+                foreach (var ttl in Ttls)
+                {
+                    for (int i = 0; i < ttl.TextureInfoCount; i++)
+                    {
+                        TextureInfo tInfo = ttl.TextureInfos[i];
+                        ExtractFile(path, ttl.TextureInfos[i].FileName.Split('\\'), tInfo.RawImage);
+                    }
+                }
+            }
+
+        }
     }
 }

@@ -34,6 +34,7 @@ namespace TrbMultiTool
 
         public void SearchForItem()
         {
+
             int targetID = Convert.ToInt32(idSearchField.Text);
 
             foreach (ListViewItem item in ListView.Items)
@@ -41,6 +42,21 @@ namespace TrbMultiTool
                 LocaleString lS = (LocaleString)item.Tag;
 
                 if (lS.id == targetID)
+                {
+                    ListView.SelectedItem = item;
+                    return;
+                }
+            }
+            
+        }
+
+        public void SearchForItemName()
+        {
+            foreach (ListViewItem item in ListView.Items)
+            {
+                LocaleString lS = (LocaleString)item.Tag;
+
+                if (idSearchNameField.Text.Contains(lS.text))
                 {
                     ListView.SelectedItem = item;
                     return;
@@ -106,7 +122,15 @@ namespace TrbMultiTool
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            SearchForItem();
+            if (idSearchNameField.Text != String.Empty)
+            {
+                SearchForItemName();
+            }
+            else if (idSearchField.Text != String.Empty)
+            {
+                SearchForItem();
+            }
+            
         }
 
         private void idSearchField_KeyDown(object sender, KeyEventArgs e)

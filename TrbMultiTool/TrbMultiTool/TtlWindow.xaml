@@ -8,11 +8,24 @@
         UseLayoutRounding="True"
         Title="TtlWindow" Height="665" Width="1332">
     <Grid>
-        <TreeView Margin="0,0,1129,0" x:Name="treeView" SelectedItemChanged="treeView_SelectedItemChanged">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="250"/>
+        </Grid.ColumnDefinitions>
 
-        </TreeView>
-        <Image HorizontalAlignment="Left" Height="548" Margin="228,36,0,0" VerticalAlignment="Top" Width="1057" x:Name="img" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-        <Button Content="Extract" HorizontalAlignment="Left" Margin="1200,588,0,0" VerticalAlignment="Top" Height="33" Width="88" Click="Button_Click"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50" />
+        </Grid.RowDefinitions>
 
+        <TreeView x:Name="treeView" SelectedItemChanged="treeView_SelectedItemChanged" Grid.RowSpan="3"/>
+        <Image x:Name="img" RenderOptions.BitmapScalingMode="HighQuality"  Grid.Column="1" Grid.Row="1"/>
+        <Button Content="Extract Everything" Click="Extract_Everything_Button_Clicked" FontFamily="Arial" FontSize="18" Grid.Column="2"/>
+        <DockPanel Grid.Row="2" Grid.Column="2">
+            <Button Content="Extract" Click="Button_Click" FontFamily="Arial" FontSize="18"/>
+        </DockPanel>
+        
     </Grid>
 </Window>

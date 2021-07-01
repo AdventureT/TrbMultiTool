@@ -17,10 +17,14 @@ namespace TrbMultiTool
         public static string _fileName;
         public bool finishedLoading = false;
 
+        public bool ContainsXui;
+
         public List<Ttex> ttexes = new();
         public List<Ttl> ttls = new();
         public List<Tmdl> tmdls = new();
         public List<Tmat> tmats = new();
+
+        public List<XUI> xuis = new();
 
         public static Tsfl Tsfl
         {
@@ -83,6 +87,13 @@ namespace TrbMultiTool
                     {
                         SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
                         var LocaleStrings = new LocaleStrings();
+                    }
+                    else if (item.FirstOrDefault().Name.Contains("txui"))
+                    {
+                        SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
+                        ContainsXui = true;
+                        var xuiOffset = Tsfl.Hdrx.TagInfos[item.Key+1].Offset;
+                        xuis.Add(new XUI(xuiOffset, hdrx));
                     }
                 }
             }

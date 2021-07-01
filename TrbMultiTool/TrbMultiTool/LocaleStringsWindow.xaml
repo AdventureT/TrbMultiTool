@@ -17,12 +17,14 @@
         <StackPanel Grid.Column="1" Margin="12">
             <TextBlock HorizontalAlignment="Center" FontWeight="Bold" FontSize="14">Selected Control</TextBlock>
             <TextBlock>Text:</TextBlock>
-            <TextBox Name="textField" Padding="2" Margin="0 0 0 4" KeyDown="textField_KeyDown" />
+            <TextBox Name="textField" Padding="2" Margin="0 0 0 4" KeyDown="textField_KeyDown" AcceptsReturn="True" />
             <TextBlock>ID:</TextBlock>
             <TextBox IsReadOnly="True" Name="idField" Padding="2" Margin="0 0 0 4" />
             <Button Click="Button_Click" Margin="0 0 0 4" Content="Apply"/>
             <Button Click="Button_Click_1">Copy</Button>
             <TextBlock HorizontalAlignment="Center" FontWeight="Bold" FontSize="14" Margin="0 10 0 0">Search</TextBlock>
+            <TextBlock>Name:</TextBlock>
+            <TextBox Name="idSearchNameField" Padding="2" Margin="0 0 0 4"/>
             <TextBlock>ID:</TextBlock>
             <TextBox Name="idSearchField" Padding="2" Margin="0 0 0 4" KeyDown="idSearchField_KeyDown" />
             <Button Click="Button_Click_2">Find</Button>

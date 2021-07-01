@@ -99,6 +99,13 @@ namespace TrbMultiTool
                         var TMDLWindow = new TmdlWindow(trb.tmdls);
                         TMDLWindow.Show();
                     }
+
+					if(trb.ContainsXui)
+                    {
+						var window = new XuiWindow(trb.xuis);
+						
+						window.Show();
+					}
                 }
 			}
 		}

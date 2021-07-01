@@ -37,6 +37,48 @@ namespace TrbMultiTool
             return sb.ToString();
         }
 
+        public static string ReadUnicodeString(BinaryReader f, uint size)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < size; i++)
+            {
+                var newByte = f.ReadByte();
+                var newByte2 = f.ReadByte();
+                if (newByte == 0 && newByte2 == 0) break;
+                var convertedChar = Encoding.Unicode.GetString(new byte[] { newByte, newByte2 });
+                sb.Append(convertedChar);
+            }
+            return sb.ToString();
+        }
+
+        public static string ReadUnicodeStringB(BinaryReader f)
+        {
+            var sb = new StringBuilder();
+            while (true)
+            {
+                var newByte = f.ReadByte();
+                var newByte2 = f.ReadByte();
+                if (newByte == 0 && newByte2 == 0) break;
+                var convertedChar = Encoding.Unicode.GetString(new byte[] { newByte, newByte2 }.Reverse().ToArray());
+                sb.Append(convertedChar);
+            }
+            return sb.ToString();
+        }
+
+        public static string ReadUnicodeStringB(BinaryReader f, uint size)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < size; i++)
+            {
+                var newByte = f.ReadByte();
+                var newByte2 = f.ReadByte();
+                if (newByte == 0 && newByte2 == 0) break;
+                var convertedChar = Encoding.Unicode.GetString(new byte[] { newByte, newByte2 }.Reverse().ToArray());
+                sb.Append(convertedChar);
+            }
+            return sb.ToString();
+        }
+
         public static string ReadStringFromOffset(BinaryReader f, uint offset)
         {
             var pos = f.BaseStream.Position;
@@ -99,6 +141,27 @@ namespace TrbMultiTool
             var result = ReadVector3(f);
             f.BaseStream.Seek(pos, SeekOrigin.Begin);
             return result;
+        }
+
+        public static uint ReadUInt32B(BinaryReader f)
+        {
+            var data = f.ReadBytes(4);
+            Array.Reverse(data);
+            return BitConverter.ToUInt32(data, 0);
+        }
+
+        public static ushort ReadUInt16B(BinaryReader f)
+        {
+            var data = f.ReadBytes(2);
+            Array.Reverse(data);
+            return BitConverter.ToUInt16(data, 0);
+        }
+
+        public static float ReadFloatB(BinaryReader f)
+        {
+            var data = f.ReadBytes(4);
+            Array.Reverse(data);
+            return BitConverter.ToSingle(data, 0);
         }
     }
 }
