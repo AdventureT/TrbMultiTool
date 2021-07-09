@@ -23,6 +23,10 @@
         <TreeView x:Name="treeView" SelectedItemChanged="treeView_SelectedItemChanged" Grid.RowSpan="3"/>
         <Image x:Name="img" RenderOptions.BitmapScalingMode="HighQuality"  Grid.Column="1" Grid.Row="1"/>
         <Button Content="Extract Everything" Click="Extract_Everything_Button_Clicked" FontFamily="Arial" FontSize="18" Grid.Column="2"/>
+        <StackPanel Grid.Column="2" Grid.Row="1">
+            <Button Content="Replace Texture" Click="Button_Click_1" FontFamily="Arial" FontSize="18" ></Button>
+        </StackPanel>
+        
         <DockPanel Grid.Row="2" Grid.Column="2">
             <Button Content="Extract" Click="Button_Click" FontFamily="Arial" FontSize="18"/>
         </DockPanel>

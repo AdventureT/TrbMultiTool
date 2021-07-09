@@ -32,6 +32,144 @@ namespace TrbMultiTool
             set;
         }
 
+        private static byte[] GetStringBytes(string str)
+        {
+            return Encoding.Default.GetBytes(str);
+        }
+
+        public static void GenerateFile(string path, MemoryStream sect, int countOfFiles, List<uint> filesSizes, List<List<uint>> offsets, List<string> names)
+        {
+            BinaryWriter binaryWriter = new(File.Open(path, FileMode.Create));
+
+            // TSFL
+            binaryWriter.Write(GetStringBytes("TSFL"));
+            binaryWriter.Write(0); // Size of TSFL
+
+            // HDRX
+            binaryWriter.Write(GetStringBytes("TRBFHDRX"));
+            var hdrx = GenerateHDRX(countOfFiles, filesSizes);
+            binaryWriter.Write((uint)hdrx.Length); // Size of HDRX
+            binaryWriter.Write(hdrx.ToArray());
+
+            // SECT
+            binaryWriter.Write(GetStringBytes("SECT"));
+            binaryWriter.Write((uint)sect.Length); // Size of SECT
+            binaryWriter.Write(sect.ToArray());
+            
+
+            // RELC
+            if (offsets.Count != 0)
+            {
+                binaryWriter.Write(GetStringBytes("RELC"));
+                var relc = GenerateRELC(offsets);
+                binaryWriter.Write((uint)relc.Length);
+                binaryWriter.Write(relc.ToArray());
+            }
+            
+            // SYMB
+            binaryWriter.Write(GetStringBytes("SYMB"));
+            var symb = GenerateSYMB(names);
+            binaryWriter.Write((uint)symb.Length);
+            binaryWriter.Write(symb.ToArray());
+
+            binaryWriter.BaseStream.Seek(4, SeekOrigin.Begin);
+            binaryWriter.Write((uint)binaryWriter.BaseStream.Length - 8);
+
+            binaryWriter.Close();
+        }
+
+        private static MemoryStream GenerateHDRX(int countOfFiles, List<uint> filesSizes)
+        {
+            var hdrx = new MemoryStream();
+            
+            hdrx.Write(BitConverter.GetBytes((ushort)1)); // Flag 1
+            hdrx.Write(BitConverter.GetBytes((ushort)1)); // Flag 2
+            hdrx.Write(BitConverter.GetBytes(countOfFiles)); // Count of Files
+
+            for (int i = 0; i < countOfFiles; i++)
+            {
+                // HDRX tag infos
+                hdrx.Write(BitConverter.GetBytes(0)); // Unk
+                hdrx.Write(BitConverter.GetBytes(filesSizes[i])); // Size of File
+                hdrx.Write(BitConverter.GetBytes(0)); // Unk1
+                hdrx.Write(BitConverter.GetBytes(0)); // Unk2
+            }
+
+            return hdrx;
+        }
+
+        private static uint GetCountOf2DArray(List<List<uint>> array)
+        {
+            uint count = 0;
+            foreach (var item in array)
+            {
+                foreach (var item2 in item)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private static MemoryStream GenerateRELC(List<List<uint>> offsets)
+        {
+            var relc = new MemoryStream();
+
+            relc.Write(BitConverter.GetBytes(GetCountOf2DArray(offsets))); // Count of Relocations
+
+            for (int i = 0; i < offsets.Count; i++)
+            {
+                foreach (var offset in offsets[i])
+                {
+                    relc.Write(BitConverter.GetBytes((ushort)i)); //Source offset hdrx index
+                    relc.Write(BitConverter.GetBytes((ushort)i)); //Target offset hdrx index < not correct yet!
+                    relc.Write(BitConverter.GetBytes(offset));
+                }
+            }
+
+            return relc;
+        }
+
+        private static MemoryStream GenerateSYMB(List<string> names)
+        {
+            var symb = new MemoryStream();
+
+            symb.Write(BitConverter.GetBytes(names.Count)); // Count of files
+
+            var nameOffsets = new List<uint>();
+
+            for (int i = -1; i < names.Count; i++)
+            {
+                nameOffsets.Add(i == -1 ? 0 : (uint)names[i].Length + (uint)nameOffsets[i]);
+            }
+
+            for (int i = 0; i < names.Count; i++)
+            {
+                symb.Write(BitConverter.GetBytes((short)i)); // HDRX ID
+                symb.Write(BitConverter.GetBytes((ushort)nameOffsets[i])); // Name offset
+                symb.Write(BitConverter.GetBytes((ushort)0)); // Padding
+
+                //The game doesn't read namehashes...
+                if (names[i] == "ttex\0")
+                {
+                    symb.Write(BitConverter.GetBytes((ushort)Ttex.ResourceNameHash(names[i]))); // Namehash
+                }
+                else
+                {
+                    symb.Write(BitConverter.GetBytes((ushort)7365)); // Namehash some random one TODO
+                }
+
+                symb.Write(BitConverter.GetBytes((uint)0)); // DataOffset ttex is 0 other ones TODO
+            }
+
+            foreach (var name in names)
+            {
+                symb.Write(GetStringBytes(name)); // NameStr
+            }
+
+            return symb;
+        }
+
         public Trb(string fileName, Game game, bool onlyExtract = false)
         {
             //SectFile = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));

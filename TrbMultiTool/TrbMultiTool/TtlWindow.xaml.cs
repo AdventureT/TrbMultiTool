@@ -198,5 +198,49 @@ namespace TrbMultiTool
             }
 
         }
+
+        private async void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            if (treeView.SelectedItem == null) return;
+            var sI = (TreeViewItem)treeView.SelectedItem;
+
+            if (sI.Tag is Ttl) return;
+            var ttex = sI.Tag as Ttex;
+
+            var fd = new Microsoft.Win32.OpenFileDialog();
+            fd.Filter = $"DDS File|*.dds";
+
+            if (fd.ShowDialog() == true)
+            {
+                var stream = fd.OpenFile();
+                var memstream = new MemoryStream();
+                await stream.CopyToAsync(memstream);
+                var sect = new MemoryStream();
+                var fileSizes = new List<uint>();
+                var offsets = new List<List<uint>>();
+                var names = new List<string>();
+                foreach (var tex in Ttex)
+                {
+                    MemoryStream currentFile;
+                    if (ttex.TextureName == tex.TextureName)
+                    {
+                        currentFile = tex.Repack(memstream);
+                        sect.Write(currentFile.ToArray());
+                    }
+                    else
+                    {
+                        currentFile = tex.Repack();
+                        sect.Write(currentFile.ToArray());
+                    }
+                    names.Add("ttex\0");
+                    offsets.Add(tex.Offsets);
+                    fileSizes.Add((uint)currentFile.Length);
+                }
+                Trb.GenerateFile("C:\\Users\\nepel\\Desktop\\DeBlobCool\\new.trb", sect, Ttex.Count, fileSizes, offsets, names);
+                //var f = new BinaryWriter(File.Open("C:\\Users\\nepel\\Desktop\\new.trb", FileMode.Create));
+                //f.Write(sect.ToArray());
+                //f.Close();
+            }
+        }
     }
 }

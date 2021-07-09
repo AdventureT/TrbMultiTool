@@ -112,16 +112,16 @@ namespace TrbMultiTool
 
         private async void ExtractFileButton_Click(object sender, RoutedEventArgs e)
         {
-		if (fileDialog.Open())
-			{
-				loadingIcon.Visibility = Visibility.Visible;
-				var game = (Game)ChooseGameComboBox.SelectedIndex;
-				var trb = await Task.Run(() => new Trb(fileDialog.fileName, game, true));
+            if (fileDialog.Open())
+            {
+                loadingIcon.Visibility = Visibility.Visible;
+                var game = (Game)ChooseGameComboBox.SelectedIndex;
+                var trb = await Task.Run(() => new Trb(fileDialog.fileName, game, true));
 
-				if (trb.finishedLoading)
-					loadingIcon.Visibility = Visibility.Hidden;
-			}
-		}
+                if (trb.finishedLoading)
+                    loadingIcon.Visibility = Visibility.Hidden;
+            }
+        }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
