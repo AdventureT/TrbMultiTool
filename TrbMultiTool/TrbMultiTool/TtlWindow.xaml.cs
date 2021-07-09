@@ -205,7 +205,6 @@ namespace TrbMultiTool
             var sI = (TreeViewItem)treeView.SelectedItem;
 
             if (sI.Tag is Ttl) return;
-            var ttex = sI.Tag as Ttex;
 
             var fd = new Microsoft.Win32.OpenFileDialog();
             fd.Filter = $"DDS File|*.dds";
@@ -219,24 +218,50 @@ namespace TrbMultiTool
                 var fileSizes = new List<uint>();
                 var offsets = new List<List<uint>>();
                 var names = new List<string>();
-                foreach (var tex in Ttex)
+
+                if (Ttex.Count > 0)
                 {
-                    MemoryStream currentFile;
-                    if (ttex.TextureName == tex.TextureName)
+                    var ttex = sI.Tag as Ttex;
+
+                    foreach (var tex in Ttex)
                     {
-                        currentFile = tex.Repack(memstream);
-                        sect.Write(currentFile.ToArray());
+                        MemoryStream currentFile;
+                        if (ttex.TextureName == tex.TextureName)
+                        {
+                            currentFile = tex.Repack(memstream);
+                            sect.Write(currentFile.ToArray());
+                        }
+                        else
+                        {
+                            currentFile = tex.Repack();
+                            sect.Write(currentFile.ToArray());
+                        }
+
+                        names.Add("ttex\0");
+                        offsets.Add(tex.Offsets);
+                        fileSizes.Add((uint)currentFile.Length);
                     }
-                    else
-                    {
-                        currentFile = tex.Repack();
-                        sect.Write(currentFile.ToArray());
-                    }
-                    names.Add("ttex\0");
-                    offsets.Add(tex.Offsets);
-                    fileSizes.Add((uint)currentFile.Length);
+
+                    Trb.GenerateFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\new.trb", sect, Ttex.Count, fileSizes, offsets, names);
                 }
-                Trb.GenerateFile("C:\\Users\\nepel\\Desktop\\DeBlobCool\\new.trb", sect, Ttex.Count, fileSizes, offsets, names);
+                else if (Ttls.Count > 0)
+                {
+                    if (sI.Tag is TextureInfo)
+                    {
+                        foreach (var ttl in Ttls)
+                        {
+                            var tInfo = sI.Tag as TextureInfo;
+
+                            sect.Write(ttl.RepackSECT(tInfo.FileName, memstream).ToArray());
+
+                            names.Add("TTL\0");
+                            fileSizes.Add((uint)sect.Length);
+                            offsets.Add(ttl.Offsets);
+                        }
+
+                        Trb.GenerateFile(Trb._fileName, sect, Ttls.Count, fileSizes, offsets, names);
+                    }
+                }
                 //var f = new BinaryWriter(File.Open("C:\\Users\\nepel\\Desktop\\new.trb", FileMode.Create));
                 //f.Write(sect.ToArray());
                 //f.Close();

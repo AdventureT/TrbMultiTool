@@ -20,11 +20,15 @@ namespace TrbMultiTool.FileFormats.TTL
         public byte[] RawImage { get; set; }
 
         public DDSImage Dds { get; set; }
+        
+        public uint FileNameOffset { get; set; }
+
+        public int BytesToSkip { get; set; }
 
         public TextureInfo(uint offset)
         {
             Flag = Trb.SectFile.ReadUInt32();
-            var FileNameOffset = offset + Trb.SectFile.ReadUInt32();
+            FileNameOffset = offset + Trb.SectFile.ReadUInt32();
             FileName = ReadHelper.ReadStringFromOffset(Trb.SectFile, FileNameOffset);
             DdsSize = Trb.SectFile.ReadUInt32();
             DdsOffset = offset + Trb.SectFile.ReadUInt32();
