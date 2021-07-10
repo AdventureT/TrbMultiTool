@@ -79,6 +79,17 @@ namespace TrbMultiTool
             public ItemTypes valueType;
         }
 
+        private bool CheckBTEC()
+        {
+            if (Trb.Tsfl.Sect.Label == "SECC")
+            {
+                MessageBox.Show("This file is BTEC encoded, so you should decode it before editing", "BTEC File Warning");
+                return false;
+            }
+
+            return true;
+        }
+
         public void AddMainInfo(uint countOfParts, int countOffset, uint blockSize, int blockSizeOffset)
         {
             TreeViewItem mainItem = new()
@@ -157,6 +168,8 @@ namespace TrbMultiTool
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            if (!CheckBTEC()) return;
+
             var sI = tree.SelectedItem as TreeViewItem;
             if (sI == null) return;
 
