@@ -237,6 +237,11 @@ namespace TrbMultiTool
                         var xuiOffset = Tsfl.Hdrx.TagInfos[item.Key+1].Offset;
                         xuis.Add(new XUI(xuiOffset, hdrx));
                     }
+                    else if (item.FirstOrDefault().Name.Contains("terrainvis"))
+                    {
+                        SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
+                        new TerrainVIS();
+                    }
                 }
             }
             else if (onlyExtract && Tsfl.Sect.Label == "SECC")

@@ -4,9 +4,67 @@ using System.Text;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Drawing;
+using System.Windows;
 
 namespace PrimeWPF
 {
+    public static class DDSConverter
+    {
+        public static byte[] FromFile(string fileName)
+        {
+            System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(fileName);
+
+            MemoryStream dds = new();
+
+            dds.Write(BitConverter.GetBytes(542327876)); // Magic
+            dds.Write(BitConverter.GetBytes(124)); // Size of DDS_HEADER
+            dds.Write(BitConverter.GetBytes(0x100F)); // Flags: DDSD_CAPS, DDSD_HEIGHT, DDSD_PITCH, DDSD_WIDTH, DDSD_PIXELFORMAT
+            dds.Write(BitConverter.GetBytes(bitmap.Height)); // Image Height
+            dds.Write(BitConverter.GetBytes(bitmap.Width)); // Image Width 
+            dds.Write(BitConverter.GetBytes(256)); // Pitch
+            dds.Write(BitConverter.GetBytes(0)); // Depth
+            dds.Write(BitConverter.GetBytes(1)); // Mipmap count
+
+            //dwReserved1
+
+            for (int i = 0; i < 11; i++)
+            {
+                dds.Write(BitConverter.GetBytes(0)); // Fill with zeros, text meta data could be stored in here
+            }
+
+            // DDS_PIXELFORMAT
+            dds.Write(BitConverter.GetBytes(32)); // Size of DDS_PIXELFORMAT
+            dds.Write(BitConverter.GetBytes(65)); // Flags: DDPF_RGB, DDPF_ALPHAPIXELS
+            dds.Write(BitConverter.GetBytes(0)); // dwFourCC
+            dds.Write(BitConverter.GetBytes(32)); // dwRGBBitCount
+            dds.Write(BitConverter.GetBytes(0x00FF0000)); // dwRBitMask
+            dds.Write(BitConverter.GetBytes(0x0000FF00)); // dwGBitMask
+            dds.Write(BitConverter.GetBytes(0x000000FF)); // dwBBitMask
+            dds.Write(BitConverter.GetBytes(0xFF000000)); // dwABitMask
+
+            dds.Write(BitConverter.GetBytes(0x1000)); // (dwCaps) Flags: DDSCAPS_TEXTURE 
+            dds.Write(BitConverter.GetBytes(0)); //(dwCaps2) No Flags
+            dds.Write(BitConverter.GetBytes(0)); //(dwCaps2) No Flags
+            dds.Write(BitConverter.GetBytes(0)); //(dwCaps2) No Flags
+            dds.Write(BitConverter.GetBytes(0)); //(dwCaps2) No Flags
+
+            for (int i = 0; i < bitmap.Height; i++)
+            {
+                for (int j = 0; j < bitmap.Width; j++)
+                {
+                    Color pixel = bitmap.GetPixel(j, i);
+                    dds.WriteByte(pixel.B);
+                    dds.WriteByte(pixel.G);
+                    dds.WriteByte(pixel.R);
+                    dds.WriteByte(pixel.A);
+                }
+            }
+
+            return dds.ToArray();
+        }
+    }
+
     public class DDSImage : IDisposable
     {
         #region Variables
