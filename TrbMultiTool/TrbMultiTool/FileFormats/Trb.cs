@@ -154,7 +154,7 @@ namespace TrbMultiTool
                 {
                     symb.Write(BitConverter.GetBytes((ushort)Ttex.ResourceNameHash(names[i]))); // Namehash
                 }
-                else if (names[i] == "TTL\0")
+                else if (names[i].EndsWith("TTL\0"))
                 {
                     symb.Write(BitConverter.GetBytes((ushort)17868));
                 }

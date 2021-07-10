@@ -34,6 +34,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="GDImageLibrary">
+      <HintPath>GDImageLibrary\GDImageLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="TQ.Texture">
+      <HintPath>GDImageLibrary\TQ.Texture.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\barnyard.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>

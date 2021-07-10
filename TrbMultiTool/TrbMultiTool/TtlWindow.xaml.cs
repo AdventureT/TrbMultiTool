@@ -252,10 +252,11 @@ namespace TrbMultiTool
                         {
                             var tInfo = sI.Tag as TextureInfo;
 
-                            sect.Write(ttl.RepackSECT(tInfo.FileName, memstream).ToArray());
+                            var newSect = ttl.RepackSECT(tInfo.FileName, memstream);
+                            sect.Write(newSect.ToArray());
 
-                            names.Add("TTL\0");
-                            fileSizes.Add((uint)sect.Length);
+                            names.Add($"{ttl.TtlName}\0");
+                            fileSizes.Add((uint)newSect.Length);
                             offsets.Add(ttl.Offsets);
                         }
 
