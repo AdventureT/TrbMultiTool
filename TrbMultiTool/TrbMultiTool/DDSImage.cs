@@ -13,7 +13,26 @@ namespace PrimeWPF
     {
         public static byte[] FromFile(string fileName)
         {
+            bool hasTransparency = false;
+
             System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(fileName);
+
+            // Check transparency
+            for (int i = 0; i < bitmap.Height; i++)
+            {
+                for (int j = 0; j < bitmap.Width; j++)
+                {
+                    Color pixel = bitmap.GetPixel(j, i);
+
+                    if (pixel.A != 0xFF)
+                    {
+                        hasTransparency = true;
+                        break;
+                    }
+                }
+
+                if (hasTransparency) break;
+            }
 
             MemoryStream dds = new();
 
@@ -35,13 +54,13 @@ namespace PrimeWPF
 
             // DDS_PIXELFORMAT
             dds.Write(BitConverter.GetBytes(32)); // Size of DDS_PIXELFORMAT
-            dds.Write(BitConverter.GetBytes(65)); // Flags: DDPF_RGB, DDPF_ALPHAPIXELS
+            dds.Write(BitConverter.GetBytes(hasTransparency ? 65 : 64)); // Flags: DDPF_RGB, DDPF_ALPHAPIXELS
             dds.Write(BitConverter.GetBytes(0)); // dwFourCC
-            dds.Write(BitConverter.GetBytes(32)); // dwRGBBitCount
+            dds.Write(BitConverter.GetBytes(hasTransparency ? 32 : 24)); // dwRGBBitCount
             dds.Write(BitConverter.GetBytes(0x00FF0000)); // dwRBitMask
             dds.Write(BitConverter.GetBytes(0x0000FF00)); // dwGBitMask
             dds.Write(BitConverter.GetBytes(0x000000FF)); // dwBBitMask
-            dds.Write(BitConverter.GetBytes(0xFF000000)); // dwABitMask
+            dds.Write(BitConverter.GetBytes(hasTransparency ? 0xFF000000 : 0)); // dwABitMask
 
             dds.Write(BitConverter.GetBytes(0x1000)); // (dwCaps) Flags: DDSCAPS_TEXTURE 
             dds.Write(BitConverter.GetBytes(0)); //(dwCaps2) No Flags
@@ -54,10 +73,13 @@ namespace PrimeWPF
                 for (int j = 0; j < bitmap.Width; j++)
                 {
                     Color pixel = bitmap.GetPixel(j, i);
+
                     dds.WriteByte(pixel.B);
                     dds.WriteByte(pixel.G);
                     dds.WriteByte(pixel.R);
-                    dds.WriteByte(pixel.A);
+
+                    if (hasTransparency)
+                        dds.WriteByte(pixel.A);
                 }
             }
 
