@@ -154,6 +154,10 @@ namespace TrbMultiTool
                 {
                     symb.Write(BitConverter.GetBytes((ushort)Ttex.ResourceNameHash(names[i]))); // Namehash
                 }
+                else if (names[i].EndsWith("TTL\0"))
+                {
+                    symb.Write(BitConverter.GetBytes((ushort)17868));
+                }
                 else
                 {
                     symb.Write(BitConverter.GetBytes((ushort)7365)); // Namehash some random one TODO
@@ -232,6 +236,11 @@ namespace TrbMultiTool
                         ContainsXui = true;
                         var xuiOffset = Tsfl.Hdrx.TagInfos[item.Key+1].Offset;
                         xuis.Add(new XUI(xuiOffset, hdrx));
+                    }
+                    else if (item.FirstOrDefault().Name.Contains("terrainvis"))
+                    {
+                        SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
+                        new TerrainVIS();
                     }
                 }
             }

@@ -15,7 +15,7 @@
             
         </ListView>
         <StackPanel Grid.Column="1" Margin="12">
-            <TextBlock HorizontalAlignment="Center" FontWeight="Bold" FontSize="14">Selected Control</TextBlock>
+            <TextBlock HorizontalAlignment="Center" FontWeight="Bold" FontSize="14">Selected</TextBlock>
             <TextBlock>Text:</TextBlock>
             <TextBox Name="textField" Padding="2" Margin="0 0 0 4" KeyDown="textField_KeyDown" AcceptsReturn="True" />
             <TextBlock>ID:</TextBlock>

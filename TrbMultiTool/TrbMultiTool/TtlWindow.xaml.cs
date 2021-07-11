@@ -205,38 +205,82 @@ namespace TrbMultiTool
             var sI = (TreeViewItem)treeView.SelectedItem;
 
             if (sI.Tag is Ttl) return;
-            var ttex = sI.Tag as Ttex;
 
             var fd = new Microsoft.Win32.OpenFileDialog();
-            fd.Filter = $"DDS File|*.dds";
+            fd.Filter = $"Image File (*.png, *.jpg, *.dds)|*.png;*.jpg;*.dds";
 
             if (fd.ShowDialog() == true)
             {
-                var stream = fd.OpenFile();
-                var memstream = new MemoryStream();
-                await stream.CopyToAsync(memstream);
+                var imgStream = new MemoryStream();
+
+                if (!fd.FileName.EndsWith(".dds"))
+                {
+                    byte[] dds = PrimeWPF.DDSConverter.FromFile(fd.FileName);
+                    await imgStream.WriteAsync(dds);
+                }
+                else
+                {
+                    var stream = fd.OpenFile();
+                    await stream.CopyToAsync(imgStream);
+                }
+
                 var sect = new MemoryStream();
                 var fileSizes = new List<uint>();
                 var offsets = new List<List<uint>>();
                 var names = new List<string>();
-                foreach (var tex in Ttex)
+
+                if (Ttex.Count > 0)
                 {
-                    MemoryStream currentFile;
-                    if (ttex.TextureName == tex.TextureName)
+                    var ttex = sI.Tag as Ttex;
+
+                    foreach (var tex in Ttex)
                     {
-                        currentFile = tex.Repack(memstream);
-                        sect.Write(currentFile.ToArray());
+                        MemoryStream currentFile;
+                        if (ttex.TextureName == tex.TextureName)
+                        {
+                            currentFile = tex.Repack(imgStream);
+                            sect.Write(currentFile.ToArray());
+                        }
+                        else
+                        {
+                            currentFile = tex.Repack();
+                            sect.Write(currentFile.ToArray());
+                        }
+
+                        names.Add("ttex\0");
+                        offsets.Add(tex.Offsets);
+                        fileSizes.Add((uint)currentFile.Length);
+
+                        currentFile.Close();
                     }
-                    else
-                    {
-                        currentFile = tex.Repack();
-                        sect.Write(currentFile.ToArray());
-                    }
-                    names.Add("ttex\0");
-                    offsets.Add(tex.Offsets);
-                    fileSizes.Add((uint)currentFile.Length);
+
+                    Trb.GenerateFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\new.trb", sect, Ttex.Count, fileSizes, offsets, names);
                 }
-                Trb.GenerateFile("C:\\Users\\nepel\\Desktop\\DeBlobCool\\new.trb", sect, Ttex.Count, fileSizes, offsets, names);
+                else if (Ttls.Count > 0)
+                {
+                    if (sI.Tag is TextureInfo)
+                    {
+                        foreach (var ttl in Ttls)
+                        {
+                            var tInfo = sI.Tag as TextureInfo;
+
+                            var newSect = ttl.RepackSECT(tInfo.FileName, imgStream);
+                            sect.Write(newSect.ToArray());
+
+                            names.Add($"{ttl.TtlName}\0");
+                            fileSizes.Add((uint)newSect.Length);
+                            offsets.Add(ttl.Offsets);
+
+                            newSect.Close();
+                        }
+
+                        Trb.GenerateFile(Trb._fileName, sect, Ttls.Count, fileSizes, offsets, names);
+                    }
+                }
+
+                imgStream.Close();
+                sect.Close();
+
                 //var f = new BinaryWriter(File.Open("C:\\Users\\nepel\\Desktop\\new.trb", FileMode.Create));
                 //f.Write(sect.ToArray());
                 //f.Close();
