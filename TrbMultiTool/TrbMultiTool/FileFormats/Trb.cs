@@ -115,7 +115,7 @@ namespace TrbMultiTool
 
         public static void AppendFile(string path, MemoryStream sect, uint fileSize, List<uint> offsets, string name)
         {
-            BinaryWriter binaryWriter = new(File.Open(path, FileMode.Create));
+            BinaryWriter binaryWriter = new(File.Open(path, FileMode.OpenOrCreate));
 
             // TSFL
             binaryWriter.Write(GetStringBytes("TSFL"));
@@ -123,7 +123,7 @@ namespace TrbMultiTool
 
             // HDRX
             binaryWriter.Write(GetStringBytes("TRBFHDRX"));
-            var hdrx = GenerateHDRX((int)Tsfl.Hdrx.Files+1, Tsfl.Hdrx.TagInfos.Select(x => x.TagSize).Append(fileSize).ToList()); //Appending new fileSize
+            using var hdrx = GenerateHDRX((int)Tsfl.Hdrx.Files+1, Tsfl.Hdrx.TagInfos.Select(x => x.TagSize).Append(fileSize).ToList()); //Appending new fileSize
             binaryWriter.Write((uint)hdrx.Length); // Size of HDRX
             binaryWriter.Write(hdrx.ToArray());
 
@@ -149,7 +149,7 @@ namespace TrbMultiTool
             {
                 binaryWriter.Write(GetStringBytes("RELC"));
 
-                var relc = new MemoryStream();
+                using var relc = new MemoryStream();
                 relc.Write(oldRelc);
                 for (int i = 0; i < offsets.Count; i++)
                 {
@@ -404,7 +404,7 @@ namespace TrbMultiTool
 
                 originalFileStream.Close();
             }
-
+            SectFile.Close();
             _f.Close();
             finishedLoading = true;
         }

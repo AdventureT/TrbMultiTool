@@ -201,7 +201,11 @@ namespace TrbMultiTool
 
         private async void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            if (treeView.SelectedItem == null) return;
+            if (treeView.SelectedItem == null)
+            {
+                System.Windows.Forms.MessageBox.Show("Choose your Texture to replace", "Choose a Texture", MessageBoxButtons.OK);
+                return;
+            }
             var sI = (TreeViewItem)treeView.SelectedItem;
 
             if (sI.Tag is Ttl) return;
@@ -293,19 +297,20 @@ namespace TrbMultiTool
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            if (treeView.SelectedItem == null) return;
-            var sI = (TreeViewItem)treeView.SelectedItem;
-
-            if (sI.Tag is Ttl) return;
-
             var fd = new Microsoft.Win32.OpenFileDialog();
             fd.Filter = $"DDS File (*.dds)|*.dds";
 
             if (fd.ShowDialog() == true)
             {
-                var ms = Ttex.FromFile(fd.FileName);
-
-                Trb.AppendFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\new.trb", ms, (uint)ms.Length, new() { 0x4, 0x8, 0x10 }, "ttex\0");
+                var fd2 = new Microsoft.Win32.SaveFileDialog();
+                fd2.Filter = $"Trb File (*.trb)|*.trb";
+                
+                if (fd2.ShowDialog() == true)
+                {
+                    var ms = Ttex.FromFile(fd.FileName);
+                    Trb.AppendFile(fd2.FileName, ms, (uint)ms.Length, new() { 0x4, 0x8, 0x10 }, "ttex\0");
+                    System.Windows.Forms.MessageBox.Show("Your Trb file has been repacked", "Repacked", MessageBoxButtons.OK);
+                }
             }
         }
     }
