@@ -43,9 +43,12 @@ namespace TrbMultiTool.FileFormats
 
         public List<uint> Offsets { get; set; } = new();
 
+        public short Idx { get; set; }
 
-        public Ttex(uint offset)
+
+        public Ttex(uint offset, short hdrxIdx)
         {
+            Idx = hdrxIdx;
             Unknown = Trb.SectFile.ReadUInt32();
             Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
             TextureNameOffset = Trb.SectFile.ReadUInt32();
@@ -144,7 +147,7 @@ namespace TrbMultiTool.FileFormats
             //Type
             dds.Seek(84, SeekOrigin.Begin);
             byte[] type = Read4Bytes(dds);
-            if (BitConverter.ToInt32(type) == 0) sect.Write(BitConverter.GetBytes(15));
+            if (BitConverter.ToInt32(type) == 0) sect.Write(BitConverter.GetBytes(0x15));
             else sect.Write(type);
 
             sect.Write(BitConverter.GetBytes(0));

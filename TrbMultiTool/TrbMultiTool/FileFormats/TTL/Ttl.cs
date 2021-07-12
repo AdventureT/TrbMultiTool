@@ -26,6 +26,8 @@ namespace TrbMultiTool.FileFormats
 
         public List<uint> Offsets { get; set; } = new();
 
+        public short Idx { get; set; }
+
 
         [DllImport("gdi32")]
         static extern int DeleteObject(IntPtr o);
@@ -115,8 +117,9 @@ namespace TrbMultiTool.FileFormats
             return sect;
         }
 
-        public Ttl(uint offset, string ttlName)
+        public Ttl(uint offset, string ttlName, short idx)
         {
+            Idx = idx;
             TtlName = ttlName;
             Offset = offset;
             Trb.SectFile.BaseStream.Seek(Offset, System.IO.SeekOrigin.Begin);

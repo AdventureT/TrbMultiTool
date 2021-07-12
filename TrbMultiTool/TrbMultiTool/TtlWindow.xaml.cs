@@ -228,10 +228,12 @@ namespace TrbMultiTool
                 var fileSizes = new List<uint>();
                 var offsets = new List<List<uint>>();
                 var names = new List<string>();
+                var idx = new List<short>();
 
                 if (Ttex.Count > 0)
                 {
                     var ttex = sI.Tag as Ttex;
+
 
                     foreach (var tex in Ttex)
                     {
@@ -250,11 +252,12 @@ namespace TrbMultiTool
                         names.Add("ttex\0");
                         offsets.Add(tex.Offsets);
                         fileSizes.Add((uint)currentFile.Length);
+                        idx.Add(tex.Idx);
 
                         currentFile.Close();
                     }
 
-                    Trb.GenerateFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\new.trb", sect, Ttex.Count, fileSizes, offsets, names);
+                    Trb.GenerateFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\new.trb", sect, fileSizes, offsets, names, idx);
                 }
                 else if (Ttls.Count > 0)
                 {
@@ -270,11 +273,12 @@ namespace TrbMultiTool
                             names.Add($"{ttl.TtlName}\0");
                             fileSizes.Add((uint)newSect.Length);
                             offsets.Add(ttl.Offsets);
+                            idx.Add(ttl.Idx);
 
                             newSect.Close();
                         }
 
-                        Trb.GenerateFile(Trb._fileName, sect, Ttls.Count, fileSizes, offsets, names);
+                        Trb.GenerateFile(Trb._fileName, sect, fileSizes, offsets, names, idx);
                     }
                 }
 

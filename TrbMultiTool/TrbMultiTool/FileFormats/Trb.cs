@@ -37,8 +37,23 @@ namespace TrbMultiTool
             return Encoding.Default.GetBytes(str);
         }
 
-        public static void GenerateFile(string path, MemoryStream sect, int countOfFiles, List<uint> filesSizes, List<List<uint>> offsets, List<string> names)
+        public static void GenerateFile(string path, MemoryStream sect, List<uint> filesSizes, List<List<uint>> offsets, List<string> names, List<short> idx)
         {
+            List<uint> finalFileSizes = new();
+
+            for (int i = 0; i < Tsfl.Hdrx.Files; i++)
+            {
+                if (!idx.Contains((short)i))
+                {
+                    finalFileSizes.Add(Tsfl.Hdrx.TagInfos[i].TagSize);
+                }
+                else
+                {
+                    finalFileSizes.Add(filesSizes[i]);
+                }
+            }
+
+
             BinaryWriter binaryWriter = new(File.Open(path, FileMode.Create));
 
             // TSFL
@@ -47,7 +62,7 @@ namespace TrbMultiTool
 
             // HDRX
             binaryWriter.Write(GetStringBytes("TRBFHDRX"));
-            var hdrx = GenerateHDRX(countOfFiles, filesSizes);
+            var hdrx = GenerateHDRX(finalFileSizes.Count, finalFileSizes);
             binaryWriter.Write((uint)hdrx.Length); // Size of HDRX
             binaryWriter.Write(hdrx.ToArray());
 
@@ -207,7 +222,7 @@ namespace TrbMultiTool
                     }
                     else if (item.FirstOrDefault().Name.Contains("TTL"))
                     {
-                        var Ttl = new Ttl(item.FirstOrDefault().DataOffset + hdrx, item.FirstOrDefault().Name);
+                        var Ttl = new Ttl(item.FirstOrDefault().DataOffset + hdrx, item.FirstOrDefault().Name, item.FirstOrDefault().ID);
                         ttls.Add(Ttl);
                     }
                     else if (item.FirstOrDefault().Name.Contains("Main"))
@@ -218,7 +233,7 @@ namespace TrbMultiTool
                     else if (item.FirstOrDefault().Name.Contains("ttex"))
                     {
                         SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
-                        ttexes.Add(new Ttex(item.FirstOrDefault().DataOffset + hdrx));
+                        ttexes.Add(new Ttex(item.FirstOrDefault().DataOffset + hdrx, item.FirstOrDefault().ID));
                     }
                     else if (item.FirstOrDefault().Name.Contains("tmat"))
                     {
