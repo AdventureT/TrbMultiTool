@@ -113,6 +113,99 @@ namespace TrbMultiTool
             return hdrx;
         }
 
+        public static void AppendFile(string path, MemoryStream sect, uint fileSize, List<uint> offsets, string name)
+        {
+            BinaryWriter binaryWriter = new(File.Open(path, FileMode.Create));
+
+            // TSFL
+            binaryWriter.Write(GetStringBytes("TSFL"));
+            binaryWriter.Write(0); // Size of TSFL
+
+            // HDRX
+            binaryWriter.Write(GetStringBytes("TRBFHDRX"));
+            var hdrx = GenerateHDRX((int)Tsfl.Hdrx.Files+1, Tsfl.Hdrx.TagInfos.Select(x => x.TagSize).Append(fileSize).ToList()); //Appending new fileSize
+            binaryWriter.Write((uint)hdrx.Length); // Size of HDRX
+            binaryWriter.Write(hdrx.ToArray());
+
+            BinaryReader binaryReader = new(File.Open(_fileName, FileMode.Open));
+            binaryReader.BaseStream.Seek(0x10, SeekOrigin.Begin); //Seek to hdrx size
+            binaryReader.BaseStream.Seek(binaryReader.ReadUInt32()+4, SeekOrigin.Current); //skip hdrx size and to sect size
+            var oldSectSize = binaryReader.ReadUInt32();
+            var oldSect = binaryReader.ReadBytes((int)oldSectSize);
+
+            // SECT
+            binaryWriter.Write(GetStringBytes("SECT"));
+            binaryWriter.Write((uint)sect.Length + oldSectSize); // Size of SECT
+            binaryWriter.Write(oldSect); //Write old Sect
+            binaryWriter.Write(sect.ToArray()); //Write new Sect = Combined new SECT
+
+            binaryReader.BaseStream.Seek(4, SeekOrigin.Current);
+            var oldRelcSize = binaryReader.ReadUInt32();
+            binaryReader.BaseStream.Seek(4, SeekOrigin.Current);
+            var oldRelc = binaryReader.ReadBytes((int)oldRelcSize-4);
+
+            // RELC
+            if (Tsfl.Relc.Count != 0)
+            {
+                binaryWriter.Write(GetStringBytes("RELC"));
+
+                var relc = new MemoryStream();
+                relc.Write(oldRelc);
+                for (int i = 0; i < offsets.Count; i++)
+                {
+                    relc.Write(BitConverter.GetBytes((ushort)Tsfl.Hdrx.Files)); //Source offset hdrx index
+                    relc.Write(BitConverter.GetBytes((ushort)Tsfl.Hdrx.Files)); //Target offset hdrx index < not correct yet!
+                    relc.Write(BitConverter.GetBytes(offsets[i]));
+                }
+                
+                binaryWriter.Write((uint)relc.Length+4);
+                binaryWriter.Write((uint)offsets.Count + Tsfl.Relc.Count);
+                binaryWriter.Write(relc.ToArray());
+            }
+
+            binaryReader.BaseStream.Seek(4, SeekOrigin.Current);
+            var oldSymbSize = binaryReader.ReadUInt32();
+            var oldSymbCount = binaryReader.ReadUInt32();
+            var oldSymbEntries = binaryReader.ReadBytes((int)oldSymbCount * 12);
+            var oldSymbNames = binaryReader.ReadBytes((int)((int)oldSymbSize - (oldSymbCount * 12) - 4));
+
+            // SYMB
+            binaryWriter.Write(GetStringBytes("SYMB"));
+
+            using var symb = new MemoryStream();
+            symb.Write(BitConverter.GetBytes(Tsfl.Symb.Count+1));
+            symb.Write(oldSymbEntries);
+            symb.Write(BitConverter.GetBytes((ushort)(Tsfl.Hdrx.Files))); // HDRX ID
+            symb.Write(BitConverter.GetBytes((ushort)oldSymbNames.Length)); // Name offset
+            symb.Write(BitConverter.GetBytes((ushort)0)); // Padding
+
+            //The game doesn't read namehashes...
+            if (name == "ttex\0")
+            {
+                symb.Write(BitConverter.GetBytes((ushort)Ttex.ResourceNameHash(name))); // Namehash
+            }
+            else if (name.EndsWith("TTL\0"))
+            {
+                symb.Write(BitConverter.GetBytes((ushort)17868));
+            }
+            else
+            {
+                symb.Write(BitConverter.GetBytes((ushort)7365)); // Namehash some random one TODO
+            }
+
+            symb.Write(BitConverter.GetBytes((uint)0)); // DataOffset ttex is 0 other ones TODO
+            symb.Write(oldSymbNames);
+            symb.Write(GetStringBytes(name));
+
+            binaryWriter.Write((uint)symb.Length);
+            binaryWriter.Write(symb.ToArray());
+
+            binaryWriter.BaseStream.Seek(4, SeekOrigin.Begin);
+            binaryWriter.Write((uint)binaryWriter.BaseStream.Length - 8);
+
+            binaryWriter.Close();
+        }
+
         private static uint GetCountOf2DArray(List<List<uint>> array)
         {
             uint count = 0;

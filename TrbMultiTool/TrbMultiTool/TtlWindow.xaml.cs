@@ -25,7 +25,7 @@ namespace TrbMultiTool
     {
         public List<Ttl> Ttls { get; set; } = new();
 
-        public List<Ttex> Ttex { get; set; } = new();
+        public List<Ttex> Ttexes { get; set; } = new();
 
         //public List<TreeViewItem> Lvis { get; set; } = new();
 
@@ -61,7 +61,7 @@ namespace TrbMultiTool
 
         public void AddTtex(Ttex ttl)
         {
-            Ttex.Add(ttl);
+            Ttexes.Add(ttl);
             ReadTtex();
         }
 
@@ -69,9 +69,9 @@ namespace TrbMultiTool
         {
             var lvi = new TreeViewItem
             {
-                Header = Ttex.Last().TextureName
+                Header = Ttexes.Last().TextureName
             };
-            lvi.Tag = Ttex.Last();
+            lvi.Tag = Ttexes.Last();
             treeView.Items.Add(lvi);
         }
 
@@ -178,9 +178,9 @@ namespace TrbMultiTool
             var fbd = new FolderBrowserDialog();
             DialogResult result = fbd.ShowDialog();
             string path = fbd.SelectedPath;
-            if (Ttex.Count > 0)
+            if (Ttexes.Count > 0)
             {
-                foreach (var ttex in Ttex)
+                foreach (var ttex in Ttexes)
                 {
                     ExtractFile(path, new[] { ttex.TextureName }, ttex.RawImage);
                 }
@@ -230,12 +230,12 @@ namespace TrbMultiTool
                 var names = new List<string>();
                 var idx = new List<short>();
 
-                if (Ttex.Count > 0)
+                if (Ttexes.Count > 0)
                 {
                     var ttex = sI.Tag as Ttex;
 
 
-                    foreach (var tex in Ttex)
+                    foreach (var tex in Ttexes)
                     {
                         MemoryStream currentFile;
                         if (ttex.TextureName == tex.TextureName)
@@ -288,6 +288,24 @@ namespace TrbMultiTool
                 //var f = new BinaryWriter(File.Open("C:\\Users\\nepel\\Desktop\\new.trb", FileMode.Create));
                 //f.Write(sect.ToArray());
                 //f.Close();
+            }
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            if (treeView.SelectedItem == null) return;
+            var sI = (TreeViewItem)treeView.SelectedItem;
+
+            if (sI.Tag is Ttl) return;
+
+            var fd = new Microsoft.Win32.OpenFileDialog();
+            fd.Filter = $"DDS File (*.dds)|*.dds";
+
+            if (fd.ShowDialog() == true)
+            {
+                var ms = Ttex.FromFile(fd.FileName);
+
+                Trb.AppendFile(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\new.trb", ms, (uint)ms.Length, new() { 0x4, 0x8, 0x10 }, "ttex\0");
             }
         }
     }

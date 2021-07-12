@@ -193,6 +193,77 @@ namespace TrbMultiTool.FileFormats
             return sect;
         }
 
+        public static MemoryStream FromFile(string path)
+        {
+            var dds = new BinaryReader(File.Open(path, FileMode.Open));
+            var fileName = Path.GetFileNameWithoutExtension(path) + ".tga";
+            var sect = new MemoryStream();
+            
+            sect.Write(BitConverter.GetBytes(0));
+            sect.Write(BitConverter.GetBytes(0x30));
+            sect.Write(BitConverter.GetBytes(0x0));
+            sect.Write(BitConverter.GetBytes((uint)dds.BaseStream.Length));
+            sect.Write(BitConverter.GetBytes(0x0));
+            sect.Write(BitConverter.GetBytes(0));
+            sect.Write(BitConverter.GetBytes(0));
+            sect.Write(BitConverter.GetBytes(1));
+            sect.Write(BitConverter.GetBytes(1));
+            sect.Write(BitConverter.GetBytes(1));
+            sect.Write(BitConverter.GetBytes(0x14));
+            sect.Write(BitConverter.GetBytes(0));
+            sect.Write(GetStringBytes(fileName+'\0'));
+
+            var BytesToSkip = 4 - ((fileName.Length + 1) % 4);
+
+            sect.Seek(BytesToSkip, SeekOrigin.Current);
+            var offset2 = sect.Position;
+
+            //Height
+            dds.BaseStream.Seek(16, SeekOrigin.Begin);
+            sect.Write(dds.ReadBytes(4));
+
+            //Width
+            dds.BaseStream.Seek(12, SeekOrigin.Begin);
+            sect.Write(dds.ReadBytes(4));
+
+            //MipMapCount
+            dds.BaseStream.Seek(28, SeekOrigin.Begin);
+            sect.Write(dds.ReadBytes(4));
+
+            //Unknown most of the time this is Height
+            dds.BaseStream.Seek(16, SeekOrigin.Begin);
+            sect.Write(dds.ReadBytes(2));
+
+            //Unknown most of the time this is Width
+            dds.BaseStream.Seek(12, SeekOrigin.Begin);
+            sect.Write(dds.ReadBytes(2));
+
+            //Type
+            dds.BaseStream.Seek(84, SeekOrigin.Begin);
+            byte[] type = dds.ReadBytes(4);
+            if (BitConverter.ToInt32(type) == 0) sect.Write(BitConverter.GetBytes(0x15));
+            else sect.Write(type);
+
+            sect.Write(BitConverter.GetBytes(0));
+
+            var offset3 = sect.Position;
+
+            dds.BaseStream.Seek(0, SeekOrigin.Begin);
+            using (var ms = new MemoryStream())
+            {
+                dds.BaseStream.CopyTo(ms);
+                sect.Write(ms.ToArray());
+            }
+
+            sect.Seek(8, SeekOrigin.Begin);
+            sect.Write(BitConverter.GetBytes((uint)offset2));
+
+            sect.Seek(16, SeekOrigin.Begin);
+            sect.Write(BitConverter.GetBytes((uint)offset3));
+
+            return sect;
+        }
+
         /*
         public void GenerateFile(string path)
         {
