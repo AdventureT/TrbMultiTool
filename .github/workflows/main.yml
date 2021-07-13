@@ -32,3 +32,21 @@ jobs:
 
       - name: Publish app 📰
         run: dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ./out
+      
+      - name: Create Github Release
+        id: create-new-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKE: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release V${{ github.run_number }}
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: out/*.exe
+          upload_url: ${{ steps.create-new-release.outputs.upload_url }}
