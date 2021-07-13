@@ -48,6 +48,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-new-release.outputs.upload_url }}
-          asset_path: ./TrbMultiTool.zip
+          asset_path: ./out
           asset_name: TrbMultiTool.zip
           asset_content_type: application/zip
