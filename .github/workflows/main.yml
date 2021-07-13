@@ -43,7 +43,7 @@ jobs:
           release_name: Release V${{ github.run_number }}
       - name: Upload Release Asset
         id: upload-release-asset 
-        uses: actions/release-asset-actions@v2
+        uses: csexton/release-asset-actions@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pattern: TrbMultiTool/TrbMultiTool/out/*.exe
