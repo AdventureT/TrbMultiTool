@@ -24,7 +24,7 @@ namespace TrbMultiTool
     /// </summary>
     public partial class TmdlWindow : Window
     {
-        const double speed = 7.5;
+        const double speed = 12;
         const double rotationSpeed = speed * 6;
         public List<Tmdl> Tmdls { get; set; } = new();
 
@@ -59,6 +59,7 @@ namespace TrbMultiTool
             Tmats = tmats;
             DataContext = this;
             cb.ItemsSource = ExportFormats;
+
             foreach (var item in tmdls)
             {
                 AddTmdl(item);
