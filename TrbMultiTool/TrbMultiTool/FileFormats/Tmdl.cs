@@ -22,7 +22,9 @@ namespace TrbMultiTool.FileFormats
         record FileHeader(string signature, uint u, uint u2, uint u3); //TODO
         record SkeletonHeader(string fileName); //TODO
         record Skeleton(uint boneCount); //TODO
-        record Materials(uint uk, uint uk2, uint uk3, uint size); //TODO
+        record Materials(uint uk, uint uk2, uint count, uint size);
+
+        public record TMaterial(string name, string path, int indexInScene);
         record Collision(uint count, uint offset); //TODO
         record Header(uint uk); //TODO 36 Bytes
 
@@ -54,6 +56,7 @@ namespace TrbMultiTool.FileFormats
         //static TmdlWindow tmdlWindow = new();
 
         public string TmdlName { get; set; }
+        public List<TMaterial> MaterialsList { get; }
 
         //public List<ModelVisual3D> MVs { get; set; } = new();
 
@@ -61,15 +64,58 @@ namespace TrbMultiTool.FileFormats
         {
             Scene.RootNode = new Node("RootNode");
 
-            var fileHeaderEntry = nameEntry.Find(x => x.Name.Contains("FileHeader"));
-            TmdlName = fileHeaderEntry.Name.Split('_').FirstOrDefault();
-            Trb.SectFile.BaseStream.Seek(fileHeaderEntry.DataOffset + hdrx, System.IO.SeekOrigin.Begin);
-            var fileHeader = new FileHeader(new string(Trb.SectFile.ReadChars(4)), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32());
-            if (fileHeader.signature != "TMDL") return;
+            // Materials
+            MaterialsList = new();
+            Scene.Materials.Add(new Material()); //You need a default material!!!!! Cost me 5 hours of figguring out on how to debug native dlls aaaggh
 
-            
-            //Assimp.Scene scene = new();
-            
+            var materialsSymb = Trb.Tsfl.Symb.NameEntries.FindAll(x => x.Name == "Materials");
+            if (materialsSymb.Count > 0)
+            {
+                var matSymb = materialsSymb[0];
+                Trb.SectFile.BaseStream.Seek(matSymb.DataOffset + hdrx, System.IO.SeekOrigin.Begin);
+
+                Materials materialsInfo = new(Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32());
+                var firstMaterial = Trb.SectFile.BaseStream.Position;
+
+                for (int i = 0; i < materialsInfo.count; i++)
+                {
+                    uint materialOffset = (uint)(firstMaterial + 0x128 * i);
+
+                    Trb.SectFile.BaseStream.Seek(materialOffset, SeekOrigin.Begin);
+
+                    var matName = ReadHelper.ReadString(Trb.SectFile);
+                    var texName = ReadHelper.ReadStringFromOffset(Trb.SectFile, materialOffset + 0x68).Replace(".tga", ".dds");
+
+                    MaterialsList.Add(new TMaterial(matName, texName, Scene.Materials.Count));
+
+                    var mat = new Material();
+
+                    var texSlot = new TextureSlot();
+                    texSlot.FilePath = texName;
+                    texSlot.TextureType = TextureType.Diffuse;
+
+                    mat.Name = matName;
+                    mat.AddMaterialTexture(texSlot);
+                    Scene.Materials.Add(mat);
+                }
+            }
+
+            // Models
+            var databaseEntries = nameEntry.FindAll(x => x.Name == "Database");
+
+            if (databaseEntries.Count > 0)
+            {
+                CreateBarnyardTerrainModel(hdrx, databaseEntries[0]);
+                TmdlName = "Database";
+            }
+            else
+            {
+                var fileHeaderEntry = nameEntry.Find(x => x.Name.Contains("FileHeader"));
+                TmdlName = fileHeaderEntry.Name.Split('_').FirstOrDefault();
+                Trb.SectFile.BaseStream.Seek(fileHeaderEntry.DataOffset + hdrx, System.IO.SeekOrigin.Begin);
+                var fileHeader = new FileHeader(new string(Trb.SectFile.ReadChars(4)), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32());
+                if (fileHeader.signature != "TMDL") return;
+            }
             
             if (Trb._game == Game.Barnyard)
             {
@@ -86,15 +132,109 @@ namespace TrbMultiTool.FileFormats
                 CreateModelDeBlob(hdrx, nameEntry.Find(x => x.Name.Contains("tmod")));
             }
 
-            //Scene.RootNode.Transform = new Matrix4x4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
-
             for (int ob = 0; ob < Scene.MeshCount; ob++)
             {
                 Scene.RootNode.MeshIndices.Add(ob);
             }
+        }
 
-            Scene.Materials.Add(new Material()); //You need a default material!!!!! Cost me 5 hours of figguring out on how to debug native dlls aaaggh
+        private void CreateBarnyardTerrainModel(uint hdrx, Symb.NameEntry databaseEntry)
+        {
+            Trb.SectFile.BaseStream.Seek(databaseEntry.DataOffset + hdrx, System.IO.SeekOrigin.Begin);
 
+            uint count = Trb.SectFile.ReadUInt32();
+            Trb.SectFile.BaseStream.Seek(Trb.SectFile.ReadUInt32() + hdrx, SeekOrigin.Begin);
+            Trb.SectFile.BaseStream.Seek(Trb.SectFile.ReadUInt32() + hdrx, SeekOrigin.Begin);
+
+            uint modelsCount = Trb.SectFile.ReadUInt32();
+            Trb.SectFile.BaseStream.Seek(Trb.SectFile.ReadUInt32() + 0x88 + hdrx, SeekOrigin.Begin);
+            
+            uint meshesCount = Trb.SectFile.ReadUInt32(); // list of items in the array
+            Trb.SectFile.BaseStream.Seek(Trb.SectFile.ReadUInt32() + hdrx, SeekOrigin.Begin); // going to the array
+
+            uint[] meshesOffsets = new uint[meshesCount];
+            for (int i = 0; i < meshesCount; i++)
+                meshesOffsets[i] = Trb.SectFile.ReadUInt32();
+
+            for (int i = 0; i < meshesCount - 1; i++)
+            {
+                uint offset = meshesOffsets[i];
+                Trb.SectFile.BaseStream.Seek(offset + hdrx, SeekOrigin.Begin);
+
+                Trb.SectFile.ReadUInt32(); // idk what it is
+                Trb.SectFile.ReadUInt32(); // idk what it is
+                Trb.SectFile.ReadUInt32(); // idk what it is
+                Trb.SectFile.ReadUInt32(); // idk what it is
+                Trb.SectFile.ReadUInt32(); // idk what it is
+                Trb.SectFile.ReadUInt32(); // idk what it is (I saw only zeros)
+
+                uint facesSize = Trb.SectFile.ReadUInt32() * 2;
+                uint vertexCount = Trb.SectFile.ReadUInt32();
+                uint vertexCount2 = Trb.SectFile.ReadUInt32();
+                uint matNameOffset = Trb.SectFile.ReadUInt32();
+                string matName = ReadHelper.ReadStringFromOffset(Trb.SectFile, matNameOffset + hdrx);
+                uint vertexesOffset = Trb.SectFile.ReadUInt32();
+                uint facesOffset = Trb.SectFile.ReadUInt32();
+
+                Trb.SectFile.BaseStream.Seek(vertexesOffset + hdrx, SeekOrigin.Begin);
+
+                Mesh mesh = new(PrimitiveType.Triangle);
+                var uvs = new List<Vector3D>();
+                for (int j = 0; j < vertexCount; j++)
+                {
+                    mesh.Vertices.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
+                    mesh.Normals.Add(new Vector3D(Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle(), Trb.SectFile.ReadSingle()));
+                    Trb.SectFile.BaseStream.Seek(12, System.IO.SeekOrigin.Current);
+                    uvs.Add(new Vector3D(Trb.SectFile.ReadSingle(), -Trb.SectFile.ReadSingle(), 0));
+                    //Trb.SectFile.ReadSingle();
+                }
+                
+                Trb.SectFile.BaseStream.Seek(facesOffset + hdrx, System.IO.SeekOrigin.Begin);
+                int startDirection = -1;
+                int faceDirection = startDirection;
+                uint readedSize = 4;
+
+                var faceA = Trb.SectFile.ReadUInt16() + 1;
+                var faceB = Trb.SectFile.ReadUInt16() + 1;
+                do
+                {
+                    var faceC = Trb.SectFile.ReadUInt16();
+                    readedSize += 2;
+
+                    if (faceC == 0xFFFF)
+                    {
+                        faceA = Trb.SectFile.ReadUInt16() + 1;
+                        faceB = Trb.SectFile.ReadUInt16() + 1;
+                        faceDirection = startDirection;
+                        readedSize += 4;
+                    }
+                    else
+                    {
+                        faceC++;
+                        faceDirection *= -1;
+                        if (faceA != faceB && faceB != faceC && faceC != faceA)
+                        {
+                            if (faceDirection > 0)
+                            {
+                                mesh.Faces.Add(new Face(new int[] { faceA - 1, faceB - 1, faceC - 1 }));
+                            }
+                            else
+                            {
+                                mesh.Faces.Add(new Face(new int[] { faceA - 1, faceC - 1, faceB - 1 }));
+                            }
+                        }
+
+                        faceA = faceB;
+                        faceB = faceC;
+                    }
+                } while (readedSize < facesSize);
+
+                var mat = MaterialsList.Find(x => x.name == matName);
+
+                mesh.MaterialIndex = mat.indexInScene;
+                mesh.TextureCoordinateChannels.SetValue(uvs, 0);
+                Scene.Meshes.Add(mesh);
+            }
         }
 
         private void CreateModelDeBlob(uint hdrx, Symb.NameEntry meshEntry)

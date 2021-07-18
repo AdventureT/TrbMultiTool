@@ -307,7 +307,7 @@ namespace TrbMultiTool
                 {
                     hdrx = Tsfl.Hdrx.TagInfos[item.Key].Offset;
 
-                    if (item.FirstOrDefault().Name.Contains("FileHeader"))
+                    if (item.FirstOrDefault().Name.Contains("FileHeader") || item.FirstOrDefault().Name.Contains("Database"))
                     {
                         var Tmdl = new Tmdl(item.ToList(), hdrx);
                         tmdls.Add(Tmdl);

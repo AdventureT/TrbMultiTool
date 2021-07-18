@@ -47,7 +47,7 @@
                 <Viewport3D.Camera>
                     <PerspectiveCamera 
                         NearPlaneDistance="0.1" 
-                        FarPlaneDistance="100" 
+                        FarPlaneDistance="500" 
                         LookDirection="0,0,1" 
                         UpDirection="0,1,0" 
                         Position="0,0,-15" 
