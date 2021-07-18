@@ -229,9 +229,16 @@ namespace TrbMultiTool.FileFormats
                     }
                 } while (readedSize < facesSize);
 
-                var mat = MaterialsList.Find(x => x.name == matName);
+                if (MaterialsList.FindIndex(x => x.name == matName) >= 0)
+                {
+                    var mat = MaterialsList.Find(x => x.name == matName);
+                    mesh.MaterialIndex = mat.indexInScene;
+                }
+                else
+                {
+                    mesh.MaterialIndex = 0;
+                }
 
-                mesh.MaterialIndex = mat.indexInScene;
                 mesh.TextureCoordinateChannels.SetValue(uvs, 0);
                 Scene.Meshes.Add(mesh);
             }
@@ -309,7 +316,7 @@ namespace TrbMultiTool.FileFormats
             uint lod_meshInfoCount = Trb.SectFile.ReadUInt32(); //??
             uint faceCount = Trb.SectFile.ReadUInt32();
             uint vertexCount = Trb.SectFile.ReadUInt32();
-            string meshName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + (uint)hdrx);
+            string matName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + (uint)hdrx);
             uint lodSubMeshInfoOffset = Trb.SectFile.ReadUInt32();
             Trb.SectFile.BaseStream.Seek(lodSubMeshInfoOffset + hdrx, System.IO.SeekOrigin.Begin);
             var meshInfos = new List<LOD_MeshInfo>();
@@ -370,7 +377,15 @@ namespace TrbMultiTool.FileFormats
                         faceB = faceC;
                     }
                 } while ((uint)Trb.SectFile.BaseStream.Position < (meshInfos[i].faceCount * 2 + meshInfos[i].faceOffset + hdrx));
-                mesh.MaterialIndex = 0; //!!!
+                if (MaterialsList.FindIndex(x => x.name == matName) >= 0)
+                {
+                    var mat = MaterialsList.Find(x => x.name == matName);
+                    mesh.MaterialIndex = mat.indexInScene;
+                }
+                else
+                {
+                    mesh.MaterialIndex = 0;
+                }
                 mesh.TextureCoordinateChannels.SetValue(uvs, 0);
                 Scene.Meshes.Add(mesh);
             }
