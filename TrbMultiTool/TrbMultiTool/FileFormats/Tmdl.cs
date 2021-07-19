@@ -26,7 +26,7 @@ namespace TrbMultiTool.FileFormats
 
         public record TMaterial(string name, string path, int indexInScene);
         record Collision(uint count, uint offset); //TODO
-        record Header(uint uk); //TODO 36 Bytes
+        record Header(uint uk, float unk2, uint meshCount); //TODO 36 Bytes
 
         public Scene Scene { get; set; } = new();
 
@@ -68,7 +68,7 @@ namespace TrbMultiTool.FileFormats
             MaterialsList = new();
             Scene.Materials.Add(new Material()); //You need a default material!!!!! Cost me 5 hours of figguring out on how to debug native dlls aaaggh
 
-            var materialsSymb = Trb.Tsfl.Symb.NameEntries.FindAll(x => x.Name == "Materials");
+            var materialsSymb = nameEntry.FindAll(x => x.Name.Contains("Materials"));
             if (materialsSymb.Count > 0)
             {
                 var matSymb = materialsSymb[0];
@@ -101,7 +101,7 @@ namespace TrbMultiTool.FileFormats
             }
 
             // Models
-            var databaseEntries = nameEntry.FindAll(x => x.Name == "Database");
+            var databaseEntries = nameEntry.FindAll(x => x.Name.Contains("Database"));
 
             if (databaseEntries.Count > 0)
             {
