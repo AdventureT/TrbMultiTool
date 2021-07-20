@@ -1,4 +1,9 @@
-﻿using System;
+﻿using OpenTK;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using OpenTK.Wpf;
+using SEViewer.Core;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,7 +17,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
+
 using System.Windows.Shapes;
 using TrbMultiTool.FileFormats;
 
@@ -24,8 +29,7 @@ namespace TrbMultiTool
     /// </summary>
     public partial class TmdlWindow : Window
     {
-        const double speed = 12;
-        const double rotationSpeed = speed * 6;
+
         public List<Tmdl> Tmdls { get; set; } = new();
 
         public List<Ttex> Ttexes { get; set; } = new();
@@ -34,11 +38,16 @@ namespace TrbMultiTool
 
         public Assimp.AssimpContext Context { get; set; } = new Assimp.AssimpContext();
 
+        private int vertexCount = 0;
+
         public ObservableCollection<Assimp.ExportFormatDescription> ExportFormats = new(new Assimp.AssimpContext().GetSupportedExportFormats());
+
 
         public TmdlWindow()
         {
             InitializeComponent();
+            var mainSettings = new GLWpfControlSettings { MajorVersion = 2, MinorVersion = 1 };
+            OpenTkControl.Start(mainSettings);
         }
 
         public TmdlWindow(List<Tmdl> tmdls)
@@ -50,7 +59,11 @@ namespace TrbMultiTool
             {
                 AddTmdl(item);
             }
+            var mainSettings = new GLWpfControlSettings { MajorVersion = 2, MinorVersion = 1 };
+            OpenTkControl.Start(mainSettings);
         }
+
+       
 
         public TmdlWindow(List<Tmdl> tmdls, List<Ttex> ttexes, List<Tmat> tmats)
         {
@@ -64,71 +77,10 @@ namespace TrbMultiTool
             {
                 AddTmdl(item);
             }
+            var mainSettings = new GLWpfControlSettings { MajorVersion = 2, MinorVersion = 1 };
+            OpenTkControl.Start(mainSettings);
         }
 
-        public void Move(double d)
-        {
-            double u = 0.05;
-            PerspectiveCamera camera = (PerspectiveCamera)myViewport.Camera;
-            Vector3D lookDirection = camera.LookDirection;
-            Point3D position = camera.Position;
-
-            lookDirection.Normalize();
-            position = position + u * lookDirection * d;
-
-            camera.Position = position;
-        }
-
-        public void Rotate(double d)
-        {
-            double u = 0.05;
-            double angleD = u * d;
-            PerspectiveCamera camera = (PerspectiveCamera)myViewport.Camera;
-
-            var m = new Matrix3D();
-            m.Rotate(new Quaternion(camera.UpDirection, -angleD));
-            camera.LookDirection = m.Transform(camera.LookDirection);
-        }
-
-        public void RotateVertical(double d)
-        {
-            double u = 0.05;
-            double angleD = u * d;
-            PerspectiveCamera camera = (PerspectiveCamera)myViewport.Camera;
-            Vector3D lookDirection = camera.LookDirection;
-
-            var cp = Vector3D.CrossProduct(camera.UpDirection, lookDirection);
-            cp.Normalize();
-
-            var m = new Matrix3D();
-            m.Rotate(new Quaternion(cp, -angleD));
-            camera.LookDirection = m.Transform(camera.LookDirection);
-        }
-
-        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            switch (e.Key)
-            {
-                case Key.D:
-                    Rotate(rotationSpeed);
-                    break;
-                case Key.A:
-                    Rotate(-rotationSpeed);
-                    break;
-                case Key.W:
-                    Move(speed);
-                    break;
-                case Key.S:
-                    Move(-speed);
-                    break;
-                case Key.E:
-                    RotateVertical(rotationSpeed);
-                    break;
-                case Key.Q:
-                    RotateVertical(-rotationSpeed);
-                    break;
-            }
-        }
 
         public void AddTmdl(Tmdl tmdl)
         {
@@ -146,61 +98,107 @@ namespace TrbMultiTool
             treeView.Items.Add(lvi);
         }
 
+        Shader shader;
+        Camera camera;
+        VBO<Vector3> _verticesVBO;
+        VBO<uint> _indicesVBO;
+        int _vertexArrayObject;
+        bool selected;
+
         private void LoadTmdl(TreeViewItem tvi)
         {
+            selected = true;
             var tmdl = tvi.Tag as Tmdl;
-            myViewport.Children.Clear();
+            //myViewport.Children.Clear();
             modelName.Content = $"Opened Model: {Trb._safeFileName}";
-            var modelGroup = new Model3DGroup();
+            //var modelGroup = new Model3DGroup();
+
             foreach (var item in tmdl.Scene.Meshes)
             {
-                var mesh = new MeshGeometry3D();
+
+                List<Vector3> vertices = new();
+                List<uint> faces = new();
+
                 foreach (var vertex in item.Vertices)
                 {
-                    mesh.Positions.Add(new(vertex.X, vertex.Y, vertex.Z));
+                    vertices.Add(new(vertex.X, vertex.Y, vertex.Z));
                 }
-                foreach (var normal in item.Normals)
-                {
-                    mesh.Normals.Add(new(normal.X, normal.Y, normal.Z));
-                }
-                foreach (var uv in item.TextureCoordinateChannels.First())
-                {
-                    mesh.TextureCoordinates.Add(new(uv.X, uv.Y));
-                }
+
                 foreach (var face in item.Faces)
                 {
-                    mesh.TriangleIndices.Add(face.Indices[0]);
-                    mesh.TriangleIndices.Add(face.Indices[1]);
-                    mesh.TriangleIndices.Add(face.Indices[2]);
+                    faces.Add((uint)face.Indices[0]);
+                    faces.Add((uint)face.Indices[1]);
+                    faces.Add((uint)face.Indices[2]);
                 }
-                var gm = new GeometryModel3D();
 
-                gm.Geometry = mesh;
-                var diffuse = new DiffuseMaterial
-                {
-                    Brush = new SolidColorBrush(Color.FromRgb(166, 166, 166))
-                };
-                gm.Material = diffuse;
+                List<Vector3> vertices2 = new();
+                List<uint> faces2 = new();
 
-                modelGroup.Children.Add(gm);
+                vertices2.Add(new Vector3(0.5f, 0.5f, 0.0f));
+                vertices2.Add(new Vector3(0.5f, -0.5f, 0.0f));
+                vertices2.Add(new Vector3(-0.5f, -0.5f, 0.0f));
+                vertices2.Add(new Vector3(-0.5f, 0.5f, 0.0f));
+
+                faces2.Add(0); faces2.Add(1); faces2.Add(2); faces2.Add(1); faces2.Add(2); faces2.Add(3);
+
+
+                _vertexArrayObject = GL.GenVertexArray();
+                GL.BindVertexArray(_vertexArrayObject);
+
+                _verticesVBO = new VBO<Vector3>(vertices.ToArray());
+                _verticesVBO.BindToShaderAttribute(shader, "Position");
+
+                _indicesVBO = new VBO<uint>(faces.ToArray(), BufferTarget.ElementArrayBuffer);
+                GL.BindVertexArray(0);
+
+                //GL.BufferData(BufferTarget.ArrayBuffer, item.VertexCount, vertices2, BufferUsageHint.StaticDraw);
+
+                //// vertex positions
+                //GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 12, IntPtr.Zero);
+                //GL.EnableVertexAttribArray(0);
+
+                //GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO[0]);
+                //GL.BufferData(BufferTarget.ElementArrayBuffer, item.FaceCount, faces2, BufferUsageHint.StaticDraw);
+                break;
+
+                //GL.BindVertexArray(0);
+                vertexCount = item.VertexCount;
             }
-            var directionalLight = new DirectionalLight
+        }
+
+        bool firstMove = true;
+        Vector2 lastPos;
+
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            const float cameraSpeed = 0.5f;
+
+
+
+
+            switch (e.Key)
             {
-                Color = Color.FromRgb(255, 255, 255),
-                Direction = new Vector3D(-1, -1, -1)
-            };
-            var directionalLight2 = new DirectionalLight
-            {
-                Color = Color.FromRgb(255, 255, 255),
-                Direction = new Vector3D(5, 5, 5)
-            };
-            modelGroup.Children.Add(directionalLight);
-            modelGroup.Children.Add(directionalLight2);
-            var modelVisual = new ModelVisual3D
-            {
-                Content = modelGroup
-            };
-            myViewport.Children.Add(modelVisual);
+                case Key.D:
+                    camera.Position += camera.Right * cameraSpeed; // Right
+                    break;
+                case Key.A:
+                    camera.Position -= camera.Right * cameraSpeed; // Left
+                    break;
+                case Key.W:
+                    camera.Position += camera.Front * cameraSpeed; // Forward
+                    break;
+                case Key.S:
+                    camera.Position -= camera.Front * cameraSpeed; // Backwards
+                    break;
+                case Key.E:
+                    camera.Position -= camera.Up * cameraSpeed; // Up
+                    break;
+                case Key.Q:
+                    camera.Position += camera.Up * cameraSpeed; // Up
+                    break;
+            }
+
+
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -237,11 +235,135 @@ namespace TrbMultiTool
                 Title = $"{exportFormat.Description}",
                 FileName = $"{System.IO.Path.GetFileNameWithoutExtension(tmdl.TmdlName)}"
             };
-            
+
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 Context.ExportFile(tmdl.Scene, openFileDialog.FileName, exportFormat.FormatId);
             }
         }
+
+        private void OpenGLControl_OpenGLDraw(object sender, SharpGL.WPF.OpenGLRoutedEventArgs args)
+        {
+            GL.ClearColor(Color4.Blue);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        }
+
+        private void OpenGLControl_OpenGLInitialized(object sender, SharpGL.WPF.OpenGLRoutedEventArgs args)
+        {
+
+            //gl = args.OpenGL;
+
+            //gl.Enable(OpenGL.GL_DEPTH_TEST);
+
+            //uint vertexShader = gl.CreateShader(OpenGL.GL_VERTEX_SHADER);
+            //gl.ShaderSource(vertexShader, vertexShaderSource);
+            //gl.CompileShader(vertexShader);
+
+            //int[] status = new int[1];
+            //gl.GetShader(vertexShader, OpenGL.GL_COMPILE_STATUS, status);
+            //if (status[0] == OpenGL.GL_FALSE)
+            //{
+            //    // Compile error
+            //    StringBuilder info = new();
+            //    gl.GetShaderInfoLog(vertexShader, 512, new IntPtr(), info);
+            //    var test = info.ToString();
+            //}
+
+
+
+            //uint fragmentShader = gl.CreateShader(OpenGL.GL_FRAGMENT_SHADER);
+            //gl.ShaderSource(fragmentShader, fragmentShaderSource);
+            //gl.CompileShader(fragmentShader);
+
+            //gl.GetShader(fragmentShader, OpenGL.GL_COMPILE_STATUS, status);
+            //if (status[0] == OpenGL.GL_FALSE)
+            //{
+            //    // Compile error
+            //    StringBuilder info = new();
+            //    gl.GetShaderInfoLog(fragmentShader, 512, new IntPtr(), info);
+            //    var test = info.ToString();
+            //}
+
+            //shaderProgram = gl.CreateProgram();
+            //gl.AttachShader(shaderProgram, vertexShader);
+            //gl.AttachShader(shaderProgram, fragmentShader);
+            //gl.LinkProgram(shaderProgram);
+
+            //gl.DeleteShader(vertexShader);
+            //gl.DeleteShader(fragmentShader);
+        }
+
+        double time = 0;
+
+        private void OpenTkControl_Render(TimeSpan obj)
+        {
+            time += obj.TotalMilliseconds / 10;
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.ClearColor(color);
+
+            if (shader == null)
+            {
+                shader = Shader.Create("yeet", "C:\\Users\\nepel\\Desktop\\Shaders\\default.vert", "C:\\Users\\nepel\\Desktop\\Shaders\\default.frag");
+            }
+
+            if (selected)
+            {
+                shader.Use();
+
+                var model = Matrix4.Identity * Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(time));
+                shader.SetMatrix("model", model);
+                shader.SetMatrix("view", camera.GetViewMatrix());
+                shader.SetMatrix("projection", camera.GetProjectionMatrix());
+
+                GL.BindVertexArray(_vertexArrayObject);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indicesVBO.Handle);
+                GL.DrawElements(PrimitiveType.Triangles, _indicesVBO.Count, DrawElementsType.UnsignedInt, 0);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+                GL.BindVertexArray(0);
+            }
+
+            const float sensitivity = 0.2f;
+            var point = PointToScreen(Mouse.GetPosition(this));
+
+            if (firstMove) // This bool variable is initially set to true.
+            {
+                lastPos = new Vector2((float)point.X, (float)point.Y);
+                firstMove = false;
+            }
+            else
+            {
+                // Calculate the offset of the mouse position
+                var deltaX = (float)point.X - lastPos.X;
+                var deltaY = (float)point.Y - lastPos.Y;
+                lastPos = new Vector2((float)point.X, (float)point.Y);
+
+                // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
+                if (camera != null)
+                {
+                    camera.Yaw += deltaX * sensitivity;
+                    camera.Pitch -= deltaY * sensitivity; // Reversed since y-coordinates range from bottom to top
+                }
+
+            }
+
+            //  Reset the modelview matrix.
+            //OpenTK.Graphics.OpenGL.GL.LoadIdentity();
+
+            //  Move the geometry into a fairly central position.
+            //OpenTK.Graphics.OpenGL.GL.Translate(-1.5f, 0.0f, -6.0f);
+        }
+
+        
+
+        private void OpenTkControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            GL.Enable(EnableCap.DepthTest);
+            GL.ClearColor(color);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            shader = Shader.Create("yeet", "C:\\Users\\nepel\\Desktop\\Shaders\\default.vert", "C:\\Users\\nepel\\Desktop\\Shaders\\default.frag");
+            camera = new Camera(Vector3.UnitZ * 3, (float)OpenTkControl.RenderSize.Width / (float)OpenTkControl.RenderSize.Height);
+        }
+
+        Color4 color = Color4.FromHsv(new Vector4(1, 0.75f, 0.75f, 1));
     }
 }

@@ -30,6 +30,9 @@
     <PackageReference Include="AssimpNet" Version="5.0.0-beta1" />
     <PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="3.1.0" />
+    <PackageReference Include="OpenTK" Version="4.6.4" />
+    <PackageReference Include="OpenTK.GLControl" Version="3.1.0" />
+    <PackageReference Include="OpenTK.GLWpfControl" Version="4.1.0" />
     <PackageReference Include="SharpGL.WPF" Version="3.1.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
   </ItemGroup>
@@ -83,6 +86,10 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Shaders\" />
   </ItemGroup>
 
 </Project>
