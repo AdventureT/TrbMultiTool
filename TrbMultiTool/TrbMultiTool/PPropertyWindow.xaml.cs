@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using TrbMultiTool.FileFormats;
@@ -31,6 +32,14 @@ namespace TrbMultiTool
             MenuItem removeButton = new();
             removeButton.Header = "Remove";
             removeButton.Click += RemoveButton_Click;
+
+            MenuItem copyButton = new();
+            copyButton.Header = "Copy";
+            copyButton.Click += CopyButton;
+
+            MenuItem pasteButton = new();
+            pasteButton.Header = "Paste";
+            pasteButton.Click += PasteButton;
 
             // create subbuttons
             MenuItem addStringButton = new();
@@ -65,6 +74,8 @@ namespace TrbMultiTool
 
             contextMenu.Items.Add(addButton);
             contextMenu.Items.Add(removeButton);
+            contextMenu.Items.Add(copyButton);
+            contextMenu.Items.Add(pasteButton);
         }
 
         private void AddSubButton_Click(object sender, EventArgs e)
@@ -182,6 +193,96 @@ namespace TrbMultiTool
             }
         }
 
+        private void PasteItem(TreeViewItem target, string data)
+        {
+            var parserReg = new Regex(@"(?<level>[-]*)?(?<name>[^\n]*?) \[(?<index>\d*); (?<type>\w+)]");
+            string[] lines = data.Split("\n");
+
+            int prevLevel = 0;
+            List<TreeViewItem> levels = new();
+            TreeViewItem previousTvi = new();
+
+            levels.Add(target);
+
+            foreach (var line in lines)
+            {
+                if (String.IsNullOrWhiteSpace(line)) continue;
+
+                var match = parserReg.Match(line);
+                var level = match.Groups["level"].Value;
+                var name = match.Groups["name"].Value;
+                var type = match.Groups["type"].Value;
+
+                if (String.IsNullOrWhiteSpace(name) || String.IsNullOrWhiteSpace(type)) return;
+
+                var propertyName = name.Contains(" = ") ? name.Split(" = ")[0] : "";
+                var propertyValue = name.Contains(" = ") ? name.Split(" = ")[1] : name;
+
+                var tvi = new TreeViewItem
+                {
+                    Header = propertyName == "" ? propertyValue : propertyName,
+                    Tag = type switch
+                    {
+                        "String" => new TypeContent(PPropertyItemType.String, propertyValue, 0, 0),
+                        "UInt" => new TypeContent(PPropertyItemType.UInt, propertyValue, 0, 0),
+                        "Int" => new TypeContent(PPropertyItemType.Int, propertyValue, 0, 0),
+                        "Float" => new TypeContent(PPropertyItemType.Float, propertyValue, 0, 0),
+                        "Bool" => new TypeContent(PPropertyItemType.Bool, propertyValue, 0, 0),
+                        "Array" => new TypeContent(PPropertyItemType.Array, propertyValue, 0, 0),
+                        "SubItem" => new TypeContent(PPropertyItemType.SubItem, propertyValue, 0, 0),
+                        _ => ""
+                    }
+                };
+
+                int levelIndex = level.Length / 4;
+                if (prevLevel < levelIndex)
+                {
+                    if (levels.Count <= levelIndex) levels.Add(previousTvi);
+                    else levels[levelIndex] = previousTvi;
+
+                    switch ((levels[levelIndex].Tag as TypeContent).Type)
+                    {
+                        case PPropertyItemType.Array:
+                            (tvi.Tag as TypeContent).InArray = true;
+                            break;
+                    }
+                }
+
+                levels[levelIndex].Items.Add(tvi);
+                prevLevel = levelIndex;
+                previousTvi = tvi;
+            }
+        }
+
+        private void CopyButton(object sender, EventArgs e)
+        {
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+            if (tvi.Tag == null) return;
+
+            var data = "";
+            TypeContent typeContent = tvi.Tag as TypeContent;
+
+            if (typeContent.InArray || typeContent.Type == PPropertyItemType.SubItem || typeContent.Type == PPropertyItemType.Array)
+                data = $"{tvi.Header} [0; {typeContent.Type}]\n";
+            else
+                data = $"{tvi.Header} = {typeContent.Value} [0; {typeContent.Type}]\n";
+
+            ScanItemsForExport(ref data, tvi.Items, 1, false);
+
+            Clipboard.SetText(data);
+        }
+
+        private void PasteButton(object sender, EventArgs e)
+        {
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+            if (tvi == null) return;
+
+            TypeContent typeContent = tvi.Tag as TypeContent;
+            if (typeContent != null && typeContent.Type != PPropertyItemType.SubItem && typeContent.Type != PPropertyItemType.Array) return;
+
+            PasteItem(tvi, Clipboard.GetText());
+        }
+
         private void swapButton_Click(object sender, RoutedEventArgs e)
         {
             if (comboBox.SelectedIndex == -1 || treeView.SelectedItem == null || (treeView.SelectedItem as TreeViewItem).Tag == null) return;
@@ -291,14 +392,14 @@ namespace TrbMultiTool
             }
         }
 
-        private void ScanItemsForExport(ref string data, ItemCollection items, int cycle = 0)
+        private void ScanItemsForExport(ref string data, ItemCollection items, int cycle = 0, bool useEmptyLines = true)
         {
             int index = 0;
 
             foreach (TreeViewItem item in items)
             {
-                index++;
                 var typeContent = item.Tag as TypeContent;
+                typeContent.index = index++;
 
                 if (item.Tag != null)
                 {
@@ -324,7 +425,7 @@ namespace TrbMultiTool
                     }
                 }
 
-                if (cycle == 0) data += "\n";
+                if (useEmptyLines && cycle == 0) data += "\n";
             }
         }
 
