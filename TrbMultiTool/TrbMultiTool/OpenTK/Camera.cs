@@ -1,8 +1,8 @@
-﻿using OpenTK.Mathematics;
+﻿using OpenTK;
 using System;
 
 
-namespace TrbMultiTool
+namespace TrbMultiTool.Core
 {
     public class Camera
     {

@@ -1,10 +1,10 @@
 ﻿using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using static TrbMultiTool.TmdlWindow;
 
 namespace SEViewer.Core
 {
@@ -105,10 +105,7 @@ namespace SEViewer.Core
             [typeof(Vector2)] = 2,
             [typeof(Vector3)] = 3,
             [typeof(Vector4)] = 4,
-            [typeof(Vector2i)] = 2,
-            [typeof(Vector3i)] = 3,
-            [typeof(Vector4i)] = 4,
-            [typeof(Color4)] = 4
+            [typeof(Color4)] = 4,
         };
 
         private static readonly Dictionary<Type, VertexAttribPointerType> TypeAttribPointerType = new Dictionary<Type, VertexAttribPointerType>()
@@ -124,9 +121,6 @@ namespace SEViewer.Core
             [typeof(Vector2)] = VertexAttribPointerType.Float,
             [typeof(Vector3)] = VertexAttribPointerType.Float,
             [typeof(Vector4)] = VertexAttribPointerType.Float,
-            [typeof(Vector2i)] = VertexAttribPointerType.Int,
-            [typeof(Vector3i)] = VertexAttribPointerType.Int,
-            [typeof(Vector4i)] = VertexAttribPointerType.Int,
             [typeof(Color4)] = VertexAttribPointerType.Float
         };
 
@@ -143,9 +137,6 @@ namespace SEViewer.Core
             [typeof(Vector2)] = false,
             [typeof(Vector3)] = false,
             [typeof(Vector4)] = false,
-            [typeof(Vector2i)] = true,
-            [typeof(Vector3i)] = true,
-            [typeof(Vector4i)] = true
         };
 
         private static readonly Dictionary<Type, VertexAttribIntegerType> TypeAttribIPointerType = new Dictionary<Type, VertexAttribIntegerType>()
@@ -161,9 +152,6 @@ namespace SEViewer.Core
             [typeof(Vector2)] = VertexAttribIntegerType.Int,
             [typeof(Vector3)] = VertexAttribIntegerType.Int,
             [typeof(Vector4)] = VertexAttribIntegerType.Int,
-            [typeof(Vector2i)] = VertexAttribIntegerType.Int,
-            [typeof(Vector3i)] = VertexAttribIntegerType.Int,
-            [typeof(Vector4i)] = VertexAttribIntegerType.Int,
             [typeof(Color4)] = VertexAttribIntegerType.Int
         };
 

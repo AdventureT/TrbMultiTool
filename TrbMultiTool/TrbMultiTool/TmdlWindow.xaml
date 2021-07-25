@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TrbMultiTool"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance local:TmdlWindow, IsDesignTimeCreatable=True}" xmlns:glWpfControl="clr-namespace:OpenTK.Wpf;assembly=GLWpfControl"
+        d:DataContext="{d:DesignInstance local:TmdlWindow, IsDesignTimeCreatable=True}"
         Title="TmdlWindow" Height="835" Width="915" Closing="Window_Closing" KeyDown="Window_KeyDown" >
     <Grid>
 
@@ -38,9 +38,9 @@
             <Label Content="Vertices: " x:Name="vertices" Margin="15, 0" />
             <Label Content="Faces: " x:Name="faces" Margin="15,0"/>-->
         </StackPanel>
-        
-        <glWpfControl:GLWpfControl x:Name="OpenTkControl" Grid.Row="1" Grid.ColumnSpan="3" Render="OpenTkControl_Render" Loaded="OpenTkControl_Loaded"></glWpfControl:GLWpfControl>
-        
+        <WindowsFormsHost x:Name="Host" Grid.Row="1" Grid.ColumnSpan="3"></WindowsFormsHost>
+        <!--<glWpfControl:GLWpfControl x:Name="OpenTkControl" Grid.Row="1" Grid.ColumnSpan="3" Render="OpenTkControl_Render" Loaded="OpenTkControl_Loaded"></glWpfControl:GLWpfControl>
+        -->
         <!--
         <Border BorderBrush="LightGray" BorderThickness="2" Grid.Row="1" CornerRadius="4,4,4,4" Grid.ColumnSpan="3" Margin="10,0,10,10">
             <Viewport3D Name="myViewport" Margin="0">

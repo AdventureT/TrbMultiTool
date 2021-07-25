@@ -5,7 +5,6 @@ using System.Linq;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
 
 namespace SEViewer.Core
 {
