@@ -194,8 +194,17 @@ namespace TrbMultiTool
         {
             gLControl.MakeCurrent();
             GL.Viewport(0, 0, gLControl.Width, gLControl.Height);
-            camera.Position = new Vector3(0,-2,1);
-            camera.Pitch = 90;
+            if (Trb._game == Game.DeBlob)
+            {
+                camera.Position = new Vector3(0, -10, 1);
+                camera.Pitch = 90;
+            }
+            else
+            {
+                camera.Position = new Vector3(0, -2, 1);
+                camera.Pitch = 90;
+            }
+
             camera.AspectRatio = (float)gLControl.Width / (float)gLControl.Height;
             gLControl.Invalidate();
         }
@@ -223,6 +232,7 @@ namespace TrbMultiTool
                 shader.Use();
                 deltaTime = (float)watch.ElapsedTicks / Stopwatch.Frequency;
                 var model = Matrix4.Identity * Matrix4.CreateRotationZ(deltaTime);
+                //var model = Matrix4.Identity * Matrix4.CreateRotationX(MathHelper.DegreesToRadians(270)) * Matrix4.CreateRotationZ(deltaTime);
                 shader.SetMatrix("model", model);
                 shader.SetMatrix("view", camera.GetViewMatrix());
                 shader.SetMatrix("projection", camera.GetProjectionMatrix());
@@ -274,7 +284,7 @@ namespace TrbMultiTool
             GL.Enable(EnableCap.DepthTest);
             GL.ClearColor(color);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            shader = Shader.Create("yeet", "C:\\Users\\nepel\\Desktop\\Shaders\\default.vert", "C:\\Users\\nepel\\Desktop\\Shaders\\default.frag");
+            shader = Shader.Create("yeet", "Shaders/default.vert", "Shaders/default.frag");
             //camera = new Core.Camera(Vector3.UnitZ * 3, (float)gLControl.Width / (float)gLControl.Height);
             watch = Stopwatch.StartNew();
             gLControl.Invalidate();
@@ -329,10 +339,11 @@ namespace TrbMultiTool
         {
             selected = true;
             var tmdl = tvi.Tag as Tmdl;
-            //myViewport.Children.Clear();
             modelName.Content = $"Opened Model: {Trb._safeFileName}";
-            //var modelGroup = new Model3DGroup();
-            
+            _verticesVBO.Clear();
+            _indicesVBO.Clear();
+            _vertexArrayObject.Clear();
+
             foreach (var item in tmdl.Scene.Meshes)
             {
                 List<Vector3> vertices = new();
@@ -343,7 +354,6 @@ namespace TrbMultiTool
                 {
                     vertices.Add(new(item.Vertices[i].X, item.Vertices[i].Y, item.Vertices[i].Z));
                     vertexNormals.Add(new(item.Normals[i].X, item.Normals[i].Y, item.Normals[i].Z));
-                    //vertices2.AddRange(new float[] { item.Vertices[i].X, item.Vertices[i].Y, item.Vertices[i].Z, item.Normals[i].X, item.Normals[i].Y, item.Normals[i].Z });
                 }
 
                 foreach (var face in item.Faces)
@@ -364,34 +374,10 @@ namespace TrbMultiTool
                 VBO.BindToShaderAttribute(shader, "Position");
                 VBON.BindToShaderAttribute(shader, "aNormal");
                 _verticesVBO.Add(VBO);
-                //_verticesVBO.Add(VBON);
 
                 _indicesVBO.Add(new VBO<uint>(faces.ToArray(), BufferTarget.ElementArrayBuffer));
                 GL.BindVertexArray(0);
 
-                //List<Vector3> vertices2 = new();
-                //List<uint> faces2 = new();
-
-                //vertices2.Add(new Vector3(0.5f, 0.5f, 0.0f));
-                //vertices2.Add(new Vector3(0.5f, -0.5f, 0.0f));
-                //vertices2.Add(new Vector3(-0.5f, -0.5f, 0.0f));
-                //vertices2.Add(new Vector3(-0.5f, 0.5f, 0.0f));
-
-                //faces2.Add(0); faces2.Add(1); faces2.Add(2); faces2.Add(1); faces2.Add(2); faces2.Add(3);
-
-
-
-
-                //GL.BufferData(BufferTarget.ArrayBuffer, item.VertexCount, vertices2, BufferUsageHint.StaticDraw);
-
-                //// vertex positions
-                //GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 12, IntPtr.Zero);
-                //GL.EnableVertexAttribArray(0);
-
-                //GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO[0]);
-                //GL.BufferData(BufferTarget.ElementArrayBuffer, item.FaceCount, faces2, BufferUsageHint.StaticDraw);
-
-                //GL.BindVertexArray(0);
                 vertexCount = item.VertexCount;
             }
         }
