@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using TrbMultiTool.FileFormats;
+using TrbMultiTool.PPropertyTools;
 using static TrbMultiTool.FileFormats.PProperty;
 
 namespace TrbMultiTool
@@ -14,119 +16,500 @@ namespace TrbMultiTool
     /// </summary>
     public partial class PPropertyWindow : Window
     {
-        public List<PProperty.TypeContent> TypeContentss { get; set; } = new();
+        public List<TypeContent> TypeContentss { get; set; } = new();
 
-        public List<PProperty.TypeContent> TypeContentsWithString { get; set; } = new();
+        public List<TypeContent> TypeContentsWithString { get; set; } = new();
+
+        public ContextMenu contextMenu { get; set; } = new();
 
         public PPropertyWindow()
         {
             InitializeComponent();
+
+            MenuItem addButton = new();
+            addButton.Header = "Create New";
+
+            MenuItem removeButton = new();
+            removeButton.Header = "Remove";
+            removeButton.Click += RemoveButton_Click;
+
+            MenuItem copyButton = new();
+            copyButton.Header = "Copy";
+            copyButton.Click += CopyButton;
+
+            MenuItem pasteButton = new();
+            pasteButton.Header = "Paste";
+            pasteButton.Click += PasteButton;
+
+            // create subbuttons
+            MenuItem addStringButton = new();
+            addStringButton.Header = "String";
+            addStringButton.Click += AddStringButton_Click;
+            addButton.Items.Add(addStringButton);
+
+            MenuItem addIntButton = new();
+            addIntButton.Header = "Int";
+            addIntButton.Click += AddIntButton_Click;
+            addButton.Items.Add(addIntButton);
+
+            MenuItem addUIntButton = new();
+            addUIntButton.Header = "UInt";
+            addUIntButton.Click += AddUIntButton_Click;
+            addButton.Items.Add(addUIntButton);
+
+            MenuItem addBooleanButton = new();
+            addBooleanButton.Header = "Boolean";
+            addBooleanButton.Click += AddBooleanButton_Click;
+            addButton.Items.Add(addBooleanButton);
+
+            MenuItem addArrayButton = new();
+            addArrayButton.Header = "Array";
+            addArrayButton.Click += AddArrayButton_Click;
+            addButton.Items.Add(addArrayButton);
+
+            MenuItem addSubButton = new();
+            addSubButton.Header = "SubItem";
+            addSubButton.Click += AddSubButton_Click;
+            addButton.Items.Add(addSubButton);
+
+            contextMenu.Items.Add(addButton);
+            contextMenu.Items.Add(removeButton);
+            contextMenu.Items.Add(copyButton);
+            contextMenu.Items.Add(pasteButton);
+        }
+
+        private void AddSubButton_Click(object sender, EventArgs e)
+        {
+            AddNewItem(PPropertyItemType.SubItem, null, "New SubItem");
+        }
+
+        private void AddArrayButton_Click(object sender, EventArgs e)
+        {
+            AddNewItem(PPropertyItemType.Array, null, "New Array");
+        }
+
+        private void AddBooleanButton_Click(object sender, EventArgs e)
+        {
+            AddNewItem(PPropertyItemType.Bool, "False", "New Boolean");
+        }
+
+        private void AddUIntButton_Click(object sender, EventArgs e)
+        {
+            AddNewItem(PPropertyItemType.UInt, "0", "New UInt");
+        }
+
+        private void AddIntButton_Click(object sender, EventArgs e)
+        {
+            AddNewItem(PPropertyItemType.Int, "0", "New Int");
+        }
+
+        private void AddStringButton_Click(object sender, EventArgs e)
+        {
+            AddNewItem(PPropertyItemType.String, "New Value", "New String");
+        }
+
+        private void AddNewItem(PPropertyItemType type, string value, string propertyName = "New Property")
+        {
+            if (treeView.SelectedItem == null) return;
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+            var tag = tvi.Tag as TypeContent;
+
+            if (tag == null || tag.Type == PPropertyItemType.Array || tag.Type == PPropertyItemType.SubItem)
+            {
+                var item = new TreeViewItem
+                {
+                    Header = tag.Type == PPropertyItemType.Array ? value : propertyName,
+                    Tag = new TypeContent(type, value, 0, 0, tag != null ? tag.Type == PPropertyItemType.Array ? true : false : false)
+                };
+
+                tvi.Items.Add(item);
+
+                item.IsSelected = true;
+                tvi.IsExpanded = true;
+            }
+        }
+
+        private void RemoveButton_Click(object sender, System.EventArgs e)
+        {
+            if (treeView.SelectedItem == null || (treeView.SelectedItem as TreeViewItem).Tag == null) return;
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+
+            var root = GetItemRoot(treeView.Items.GetItemAt(0) as TreeViewItem, tvi);
+            if (root != null)
+                root.Items.Remove(tvi);
+        }
+
+        public TreeViewItem GetItemRoot(TreeViewItem searchIn, TreeViewItem target)
+        {
+            foreach (TreeViewItem item in searchIn.Items)
+            {
+                if (target == item)
+                {
+                    return searchIn;
+                }
+                else if (item.Items.Count > 0)
+                {
+                    var found = GetItemRoot(item, target);
+                    if (found != null) return found;
+                }
+            }
+
+            return null;
         }
 
         private void treeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            UpdateFields();
+        }
+
+        private void UpdateFields()
+        {
             var tvi = (TreeViewItem)treeView.SelectedItem;
+
             if (tvi.Tag != null)
             {
                 var tag = tvi.Tag as TypeContent;
-                label.Content = tag.Type;
-                textBox.Text = tag.Value;
+                label.Text = tag.Type.ToString();
+
+                if (tag.InArray)
+                    propertyName.IsEnabled = false;
+                else
+                    propertyName.IsEnabled = true;
+
+                if (tag.Type == PPropertyItemType.Array || tag.Type == PPropertyItemType.SubItem)
+                    propertyValue.IsEnabled = false;
+                else
+                    propertyValue.IsEnabled = true;
+
+                if (tag.Type == PPropertyItemType.String)
+                    swapButton.IsEnabled = true;
+                else
+                    swapButton.IsEnabled = false;
+
+                propertyId.Text = tag.index.ToString();
+
+                propertyName.Text = tvi.Header.ToString();
+                propertyValue.Text = tag.Value;
             }
         }
 
-        private bool CheckBTEC()
+        private void PasteItem(TreeViewItem target, string data)
         {
-            if (Trb.Tsfl.Sect.Label == "SECC")
-            {
-                MessageBox.Show("This file is BTEC encoded, so you should decode it before editing", "BTEC File Warning");
-                return false;
-            }
+            var parserReg = new Regex(@"(?<level>[-]*)?(?<name>[^\n]*?) \[(?<index>\d*); (?<type>\w+)]");
+            string[] lines = data.Split("\n");
 
-            return true;
+            int prevLevel = 0;
+            List<TreeViewItem> levels = new();
+            TreeViewItem previousTvi = new();
+
+            levels.Add(target);
+
+            foreach (var line in lines)
+            {
+                if (String.IsNullOrWhiteSpace(line)) continue;
+
+                var match = parserReg.Match(line);
+                var level = match.Groups["level"].Value;
+                var name = match.Groups["name"].Value;
+                var type = match.Groups["type"].Value;
+
+                if (String.IsNullOrWhiteSpace(name) || String.IsNullOrWhiteSpace(type)) return;
+
+                var propertyName = name.Contains(" = ") ? name.Split(" = ")[0] : "";
+                var propertyValue = name.Contains(" = ") ? name.Split(" = ")[1] : name;
+
+                var tvi = new TreeViewItem
+                {
+                    Header = propertyName == "" ? propertyValue : propertyName,
+                    Tag = type switch
+                    {
+                        "String" => new TypeContent(PPropertyItemType.String, propertyValue, 0, 0),
+                        "UInt" => new TypeContent(PPropertyItemType.UInt, propertyValue, 0, 0),
+                        "Int" => new TypeContent(PPropertyItemType.Int, propertyValue, 0, 0),
+                        "Float" => new TypeContent(PPropertyItemType.Float, propertyValue, 0, 0),
+                        "Bool" => new TypeContent(PPropertyItemType.Bool, propertyValue, 0, 0),
+                        "Array" => new TypeContent(PPropertyItemType.Array, propertyValue, 0, 0),
+                        "SubItem" => new TypeContent(PPropertyItemType.SubItem, propertyValue, 0, 0),
+                        _ => ""
+                    }
+                };
+
+                int levelIndex = level.Length / 4;
+                if (prevLevel < levelIndex)
+                {
+                    if (levels.Count <= levelIndex) levels.Add(previousTvi);
+                    else levels[levelIndex] = previousTvi;
+
+                    switch ((levels[levelIndex].Tag as TypeContent).Type)
+                    {
+                        case PPropertyItemType.Array:
+                            (tvi.Tag as TypeContent).InArray = true;
+                            break;
+                    }
+                }
+
+                levels[levelIndex].Items.Add(tvi);
+                prevLevel = levelIndex;
+                previousTvi = tvi;
+            }
+        }
+
+        private void CopyButton(object sender, EventArgs e)
+        {
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+            if (tvi.Tag == null) return;
+
+            var data = "";
+            TypeContent typeContent = tvi.Tag as TypeContent;
+
+            if (typeContent.InArray || typeContent.Type == PPropertyItemType.SubItem || typeContent.Type == PPropertyItemType.Array)
+                data = $"{tvi.Header} [0; {typeContent.Type}]\n";
+            else
+                data = $"{tvi.Header} = {typeContent.Value} [0; {typeContent.Type}]\n";
+
+            ScanItemsForExport(ref data, tvi.Items, 1, false);
+
+            Clipboard.SetText(data);
+        }
+
+        private void PasteButton(object sender, EventArgs e)
+        {
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+            if (tvi == null) return;
+
+            TypeContent typeContent = tvi.Tag as TypeContent;
+            if (typeContent != null && typeContent.Type != PPropertyItemType.SubItem && typeContent.Type != PPropertyItemType.Array) return;
+
+            PasteItem(tvi, Clipboard.GetText());
         }
 
         private void swapButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!CheckBTEC() || comboBox.SelectedIndex == -1) return;
+            if (comboBox.SelectedIndex == -1 || treeView.SelectedItem == null || (treeView.SelectedItem as TreeViewItem).Tag == null) return;
+
             var typeContentCb = TypeContentsWithString[comboBox.SelectedIndex];
             var tvi = (TreeViewItem)treeView.SelectedItem;
             var tag = tvi.Tag as TypeContent;
-            using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
-            writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + tag.PointerPos, SeekOrigin.Begin);
-            writer.Write((uint)typeContentCb.Offset);
+
+            if (tag.Type != PPropertyItemType.Array && tag.Type != PPropertyItemType.SubItem)
+            {
+                tag.Value = typeContentCb.Value;
+
+                if (tag.InArray)
+                    tvi.Header = typeContentCb.Value;
+            }
+
+            UpdateFields();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Apply(object sender, RoutedEventArgs e)
         {
-            if (!CheckBTEC()) return;
+            if (treeView.SelectedItem == null) return;
             var tvi = (TreeViewItem)treeView.SelectedItem;
             var tag = tvi.Tag as TypeContent;
-            using BinaryWriter writer = new BinaryWriter(File.Open(Trb._fileName, FileMode.Open, FileAccess.ReadWrite));
-            writer.BaseStream.Seek(Trb.Tsfl.Sect.Offset + tag.Offset, SeekOrigin.Begin);
-            switch (tag.Type)
-            {
-                case PProperty.Type.Int:
-                    writer.Write(Convert.ToUInt32(textBox.Text));
-                    break;
-                case PProperty.Type.Unknown:
-                    break;
-                case PProperty.Type.Float:
-                    writer.Write(Convert.ToSingle(textBox.Text));
-                    break;
-                case PProperty.Type.Bool:
-                    writer.Write(Convert.ToBoolean(textBox.Text) ? 1 : 0);
-                    break;
-                case PProperty.Type.SubItem:
-                    break;
-                case PProperty.Type.Unknown2:
-                    break;
-                case PProperty.Type.Player:
-                    break;
-                case PProperty.Type.String:
-                    if (textBox.Text.Length > tag.Value.Length)
-                    {
-                        MessageBox.Show("Your inputted string is too large!");
-                    }
-                    else
-                    {
-                        //var allText = FindVisualChildren<TreeViewItem>(treeView);
-                        var remainingLength = tag.Value.Length - textBox.Text.Length;
-                        var charArr = textBox.Text.ToCharArray();
-                        for (int i = 0; i < remainingLength; i++)
-                        {
-                            charArr = charArr.Append('\0').ToArray();
-                        }
-                        writer.Write(charArr);
-                    }
-                    break;
-                case PProperty.Type.UInt:
-                    writer.Write(Convert.ToUInt32(textBox.Text));
-                    break;
-                default:
-                    break;
-            }
+
+            if (tag.InArray)
+                tvi.Header = propertyValue.Text;
+            else 
+                tvi.Header = propertyName.Text;
+
+            tag.Value = propertyValue.Text;
+
+            UpdateFields();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            TypeContentsWithString = TypeContentss.Where(x => x.Type == PProperty.Type.String).GroupBy(p => p.Value).Select(grp => grp.FirstOrDefault()).ToList();
+            TypeContentsWithString = TypeContentss.Where(x => x.Type == PPropertyItemType.String).GroupBy(p => p.Value).Select(grp => grp.FirstOrDefault()).ToList();
             var tCWS2 = TypeContentsWithString.Select(x => x.Value);
             comboBox.Items.Clear();
-            foreach (var item in tCWS2)
+
+            foreach (TreeViewItem item in treeView.Items)
             {
+                item.ContextMenu = contextMenu;
+            }
+
+            foreach (var item in tCWS2)
                 comboBox.Items.Add(item);
+
+            ApplyToolTips((treeView.Items.GetItemAt(0) as TreeViewItem).Items);
+        }
+
+        private void ScanItemsAndAdd(ref StringsLibrary stringsLibrary, ref List<PPropertyItem> properties, ItemCollection items, bool inArray = false)
+        {
+            foreach (TreeViewItem item in items)
+            {
+                var typeContent = item.Tag as TypeContent;
+                StringInfo strName = new("");
+
+                if (!inArray)
+                    strName = stringsLibrary.Add(item.Header.ToString());
+
+                switch (typeContent.Type)
+                {
+                    case PPropertyItemType.String:
+                        var strValue = stringsLibrary.Add(typeContent.Value);
+                        if (inArray)
+                            properties.Add(new PPropertyString(strValue));
+                        else
+                            properties.Add(new PPropertyString(strName, strValue));
+                        break;
+                    case PPropertyItemType.Int:
+                        if (inArray)
+                            properties.Add(new PPropertyInt(Convert.ToInt32(typeContent.Value)));
+                        else
+                            properties.Add(new PPropertyInt(strName, Convert.ToInt32(typeContent.Value)));
+                        break;
+                    case PPropertyItemType.UInt:
+                        if (inArray)
+                            properties.Add(new PPropertyUInt(Convert.ToUInt32(typeContent.Value)));
+                        else
+                            properties.Add(new PPropertyUInt(strName, Convert.ToUInt32(typeContent.Value)));
+                        break;
+                    case PPropertyItemType.Bool:
+                        if (inArray)
+                            properties.Add(new PPropertyBool(typeContent.Value.ToLower() == "true"));
+                        else
+                            properties.Add(new PPropertyBool(strName, typeContent.Value.ToLower() == "true"));
+                        break;
+                    case PPropertyItemType.Float:
+                        if (inArray)
+                            properties.Add(new PPropertyFloat((float)Convert.ToDouble(typeContent.Value)));
+                        else
+                            properties.Add(new PPropertyFloat(strName, (float)Convert.ToDouble(typeContent.Value)));
+                        break;
+                    case PPropertyItemType.Array:
+                        var arrProperty = new PPropertyArray(strName);
+                        ScanItemsAndAdd(ref stringsLibrary, ref arrProperty.Value, item.Items, true);
+                        properties.Add(arrProperty);
+                        break;
+                    case PPropertyItemType.SubItem:
+                        var subProperty = new PPropertySubItem(strName);
+                        ScanItemsAndAdd(ref stringsLibrary, ref subProperty.Value, item.Items);
+                        properties.Add(subProperty);
+                        break;
+                }
             }
         }
 
-        private void comboBox_DropDownOpened(object sender, EventArgs e)
+        private void ScanItemsForExport(ref string data, ItemCollection items, int cycle = 0, bool useEmptyLines = true)
         {
-            //TypeContentsWithString = TypeContentss.Where(x => x.Type == Quest.Type.String).Distinct().ToList();
-            //var tCWS2 = TypeContentsWithString.Select(x => x.Value);
-            //comboBox.Items.Clear();
-            //foreach (var item in tCWS2)
-            //{
-            //    comboBox.Items.Add(item);
-            //}
+            int index = 0;
+
+            foreach (TreeViewItem item in items)
+            {
+                var typeContent = item.Tag as TypeContent;
+                typeContent.index = index++;
+
+                if (item.Tag != null)
+                {
+                    var name = item.Header.ToString();
+
+                    for (int i = 0; i < cycle; i++)
+                        data += "----";
+
+                    data += name;
+                    switch (typeContent.Type)
+                    {
+                        case PPropertyItemType.Array:
+                            data += $" [{typeContent.index}; Array]\n";
+                            ScanItemsForExport(ref data, item.Items, cycle + 1);
+                            break;
+                        case PPropertyItemType.SubItem:
+                            data += $" [{typeContent.index}; SubItem]\n";
+                            ScanItemsForExport(ref data, item.Items, cycle + 1);
+                            break;
+                        default:
+                            data += $" = {typeContent.Value} [{typeContent.index}; {typeContent.Type}]\n";
+                            break;
+                    }
+                }
+
+                if (useEmptyLines && cycle == 0) data += "\n";
+            }
+        }
+
+        private void ApplyToolTips(ItemCollection items)
+        {
+            foreach (TreeViewItem item in items)
+            {
+                var typeContent = item.Tag as TypeContent;
+
+                if (item.Tag != null)
+                {
+                    switch (typeContent.Type)
+                    {
+                        case PPropertyItemType.Array:
+                            ApplyToolTips(item.Items);
+                            break;
+                        case PPropertyItemType.SubItem:
+                            ApplyToolTips(item.Items);
+                            break;
+                        default:
+                            item.ToolTip = typeContent.Value;
+                            break;
+                    }
+                }
+            }
+        }
+
+        private void SaveFile(string path)
+        {
+            var properties = new List<PPropertyItem>();
+            var stringsLibrary = new StringsLibrary();
+
+            ScanItemsAndAdd(ref stringsLibrary, ref properties, (treeView.Items.GetItemAt(0) as TreeViewItem).Items);
+            Maker.MakeFile(path, stringsLibrary, properties);
+        }
+
+        private void Save(object sender, RoutedEventArgs e)
+        {
+            SaveFile(Trb._fileName);
+        }
+
+        private void SaveAs(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "PProperty.trb";
+            dlg.Filter = $"TRB File|*.trb|TRZ File|*.trz";
+
+            if (dlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(dlg.FileName))
+                SaveFile(dlg.FileName);
+        }
+
+        private void Export(object sender, RoutedEventArgs e)
+        {
+            string data = "";
+            ScanItemsForExport(ref data, (treeView.Items.GetItemAt(0) as TreeViewItem).Items);
+
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Exported.txt";
+            dlg.Filter = $"Text File|*.txt";
+
+            if (dlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(dlg.FileName))
+                File.WriteAllText(dlg.FileName, data);
+        }
+
+        private void FindById()
+        {
+            if (treeView.SelectedItem == null) return;
+            var tvi = (TreeViewItem)treeView.SelectedItem;
+            var root = GetItemRoot(treeView.Items.GetItemAt(0) as TreeViewItem, tvi);
+            var tag = tvi.Tag as TypeContent;
+
+            var id = Convert.ToInt32(searchId.Text);
+
+            if (root.Items.Count > 0 && id < root.Items.Count)
+            {
+                var foundItem = root.Items[id] as TreeViewItem;
+                foundItem.IsSelected = true;
+                foundItem.IsExpanded = true;
+            }
+        }
+
+        private void Find(object sender, RoutedEventArgs e)
+        {
+            FindById();
         }
 
         //IEnumerable<TreeViewItem> Collect(TreeView nodes)

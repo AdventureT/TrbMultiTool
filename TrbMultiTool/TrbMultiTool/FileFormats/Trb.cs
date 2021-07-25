@@ -43,11 +43,11 @@ namespace TrbMultiTool
 
             for (int i = 0; i < Tsfl.Hdrx.Files; i++)
             {
-                if (!idx.Contains((short)i))
+                if (!idx.Contains((short)i) && Tsfl.Hdrx.TagInfos[i].TagSize == filesSizes[i])
                 {
                     finalFileSizes.Add(Tsfl.Hdrx.TagInfos[i].TagSize);
                 }
-                else
+                else if (Tsfl.Hdrx.TagInfos[i].TagSize != filesSizes[i])
                 {
                     finalFileSizes.Add(filesSizes[i]);
                 }
@@ -158,7 +158,7 @@ namespace TrbMultiTool
                     relc.Write(BitConverter.GetBytes(offsets[i]));
                 }
                 
-                binaryWriter.Write((uint)relc.Length+4);
+                binaryWriter.Write((uint)relc.Length + 4);
                 binaryWriter.Write((uint)offsets.Count + Tsfl.Relc.Count);
                 binaryWriter.Write(relc.ToArray());
             }
@@ -187,6 +187,10 @@ namespace TrbMultiTool
             else if (name.EndsWith("TTL\0"))
             {
                 symb.Write(BitConverter.GetBytes((ushort)17868));
+            }
+            else if (name.EndsWith("Main\0"))
+            {
+                symb.Write(BitConverter.GetBytes((ushort)31193));
             }
             else
             {
@@ -227,6 +231,8 @@ namespace TrbMultiTool
 
             for (int i = 0; i < offsets.Count; i++)
             {
+                offsets[i].Sort();
+
                 foreach (var offset in offsets[i])
                 {
                     relc.Write(BitConverter.GetBytes((ushort)i)); //Source offset hdrx index
@@ -266,6 +272,10 @@ namespace TrbMultiTool
                 {
                     symb.Write(BitConverter.GetBytes((ushort)17868));
                 }
+                else if (names[i].EndsWith("Main\0"))
+                {
+                    symb.Write(BitConverter.GetBytes((ushort)31193));
+                }
                 else
                 {
                     symb.Write(BitConverter.GetBytes((ushort)7365)); // Namehash some random one TODO
@@ -284,11 +294,6 @@ namespace TrbMultiTool
 
         public Trb(string fileName, Game game, bool onlyExtract = false)
         {
-            //SectFile = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
-            //SectFile.BaseStream.Seek(0, SeekOrigin.Begin);
-            //var Quest = new Quest();
-            //return;
-
             _fileName = fileName;
             _safeFileName = fileName.Split("\\").Last();
             _game = game;
@@ -307,11 +312,10 @@ namespace TrbMultiTool
                 {
                     hdrx = Tsfl.Hdrx.TagInfos[item.Key].Offset;
 
-                    if (item.FirstOrDefault().Name.Contains("FileHeader") || item.FirstOrDefault().Name.Contains("Database"))
+                    if (item.FirstOrDefault().Name.Contains("FileHeader") || item.FirstOrDefault().Name == "Database")
                     {
                         var Tmdl = new Tmdl(item.ToList(), hdrx);
                         tmdls.Add(Tmdl);
-                        //TMDLWindow.AddTmdl(Tmdl);
                     }
                     else if (item.FirstOrDefault().Name.Contains("TTL"))
                     {
