@@ -97,10 +97,21 @@ namespace TrbMultiTool
         private void LoadTtl(TreeViewItem tvi)
         {
             if (tvi.Tag is Ttex) { LoadTtex(tvi); return; }
-            var dds = ((TextureInfo)tvi.Tag).Dds;
-            img.Source = Ttl.LoadBitmap(dds.BitmapImage);
-            img.Width = dds.BitmapImage.Width;
-            img.Height = dds.BitmapImage.Height;
+            if (Trb._game == Game.NicktoonsUnite)
+            {
+                var bitmap = ((TextureInfo)tvi.Tag).Bitmap;
+                img.Source = Ttl.LoadBitmap(bitmap);
+                img.Width = bitmap.Width;
+                img.Height = bitmap.Height;
+            }
+            else
+            {
+                var dds = ((TextureInfo)tvi.Tag).Dds;
+                img.Source = Ttl.LoadBitmap(dds.BitmapImage);
+                img.Width = dds.BitmapImage.Width;
+                img.Height = dds.BitmapImage.Height;
+            }
+            
         }
 
         private void LoadTtex(TreeViewItem tvi)

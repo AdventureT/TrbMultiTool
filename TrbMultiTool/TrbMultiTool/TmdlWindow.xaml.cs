@@ -40,11 +40,9 @@ namespace TrbMultiTool
 
         public Assimp.AssimpContext Context { get; set; } = new Assimp.AssimpContext();
 
-        private int vertexCount = 0;
-
         public ObservableCollection<Assimp.ExportFormatDescription> ExportFormats = new(new Assimp.AssimpContext().GetSupportedExportFormats());
 
-        OpenTK.GLControl gLControl;
+        GLControl gLControl;
 
         private Stopwatch watch;
 
@@ -56,11 +54,20 @@ namespace TrbMultiTool
 
         private static bool mouseDown;
 
+        private Matrix4 model;
+
+        Color4 color = Color4.FromHsv(new Vector4(1, 0.75f, 0.75f, 1));
+
+        Shader shader;
+        Core.Camera camera;
+        private List<VBO<Vector3>> _verticesVBO = new();
+        private List<VBO<uint>> _indicesVBO = new();
+        private List<int> _vertexArrayObject = new();
+        bool selected;
+
         public TmdlWindow()
         {
             InitializeComponent();
-            //var mainSettings = new GLWpfControlSettings { MajorVersion = 2, MinorVersion = 1 };
-            //OpenTkControl.Start(mainSettings);
         }
 
         public TmdlWindow(List<Tmdl> tmdls)
@@ -72,8 +79,10 @@ namespace TrbMultiTool
             {
                 AddTmdl(item);
             }
-            gLControl = new OpenTK.GLControl();
-            gLControl.Dock = DockStyle.Fill;
+            gLControl = new GLControl
+            {
+                Dock = DockStyle.Fill
+            };
             gLControl.Paint += GLControl_Paint;
             gLControl.Load += GLControl_Load;
             gLControl.Resize += GLControl_Resize;
@@ -83,8 +92,7 @@ namespace TrbMultiTool
 
             camera = new Core.Camera(Vector3.UnitZ * 3, (float)gLControl.Width / (float)gLControl.Height);
 
-
-            ComponentDispatcher.ThreadIdle += new System.EventHandler(ComponentDispatcher_ThreadIdle);
+            ComponentDispatcher.ThreadIdle += new EventHandler(ComponentDispatcher_ThreadIdle);
         }
 
         private void GLControl_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -111,9 +119,6 @@ namespace TrbMultiTool
 
         void ComponentDispatcher_ThreadIdle(object sender, EventArgs e)
         {
-            //watch.Stop();
-            //deltaTime = (float)watch.ElapsedTicks / Stopwatch.Frequency;
-            //watch.Restart();
             Render();
         }
 
@@ -196,15 +201,14 @@ namespace TrbMultiTool
             GL.Viewport(0, 0, gLControl.Width, gLControl.Height);
             if (Trb._game == Game.DeBlob)
             {
-                camera.Position = new Vector3(0, -10, 1);
-                camera.Pitch = 90;
+                // Get the fuck back, de blob models are big as hell
+                camera.Position = new Vector3(0, -20, 1);
             }
             else
             {
-                camera.Position = new Vector3(0, -2, 1);
-                camera.Pitch = 90;
+                camera.Position = new Vector3(0, -3, 1);
             }
-
+            camera.Pitch = 90;
             camera.AspectRatio = (float)gLControl.Width / (float)gLControl.Height;
             gLControl.Invalidate();
         }
@@ -222,17 +226,15 @@ namespace TrbMultiTool
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.ClearColor(color);
 
-            if (shader == null)
-            {
-                shader = Shader.Create("yeet", "C:\\Users\\nepel\\Desktop\\Shaders\\default.vert", "C:\\Users\\nepel\\Desktop\\Shaders\\default.frag");
-            }
-
             if (selected)
             {
                 shader.Use();
                 deltaTime = (float)watch.ElapsedTicks / Stopwatch.Frequency;
-                var model = Matrix4.Identity * Matrix4.CreateRotationZ(deltaTime);
-                //var model = Matrix4.Identity * Matrix4.CreateRotationX(MathHelper.DegreesToRadians(270)) * Matrix4.CreateRotationZ(deltaTime);
+
+                //Deblob has a 270° rotation on the X-axis for some reason
+                if (Trb._game == Game.DeBlob) model = Matrix4.Identity * Matrix4.CreateRotationX(MathHelper.DegreesToRadians(270)) * Matrix4.CreateRotationZ(deltaTime);
+                else model = Matrix4.Identity * Matrix4.CreateRotationZ(deltaTime);
+                
                 shader.SetMatrix("model", model);
                 shader.SetMatrix("view", camera.GetViewMatrix());
                 shader.SetMatrix("projection", camera.GetProjectionMatrix());
@@ -285,7 +287,6 @@ namespace TrbMultiTool
             GL.ClearColor(color);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             shader = Shader.Create("yeet", "Shaders/default.vert", "Shaders/default.frag");
-            //camera = new Core.Camera(Vector3.UnitZ * 3, (float)gLControl.Width / (float)gLControl.Height);
             watch = Stopwatch.StartNew();
             gLControl.Invalidate();
         }
@@ -307,8 +308,6 @@ namespace TrbMultiTool
             {
                 AddTmdl(item);
             }
-            //var mainSettings = new GLWpfControlSettings { MajorVersion = 2, MinorVersion = 1 };
-            //OpenTkControl.Start(mainSettings);
         }
 
 
@@ -328,12 +327,6 @@ namespace TrbMultiTool
             treeView.Items.Add(lvi);
         }
 
-        Shader shader;
-        Core.Camera camera;
-        private List<VBO<Vector3>> _verticesVBO = new();
-        private List<VBO<uint>> _indicesVBO = new();
-        private List<int> _vertexArrayObject = new();
-        bool selected;
 
         private void LoadTmdl(TreeViewItem tvi)
         {
@@ -377,40 +370,11 @@ namespace TrbMultiTool
 
                 _indicesVBO.Add(new VBO<uint>(faces.ToArray(), BufferTarget.ElementArrayBuffer));
                 GL.BindVertexArray(0);
-
-                vertexCount = item.VertexCount;
             }
         }
 
         private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            //const float cameraSpeed = 0.5f;
-
-
-
-
-            //switch (e.Key)
-            //{
-            //    case Key.D:
-            //        camera.Position += camera.Right * cameraSpeed; // Right
-            //        break;
-            //    case Key.A:
-            //        camera.Position -= camera.Right * cameraSpeed; // Left
-            //        break;
-            //    case Key.W:
-            //        camera.Position += camera.Front * cameraSpeed; // Forward
-            //        break;
-            //    case Key.S:
-            //        camera.Position -= camera.Front * cameraSpeed; // Backwards
-            //        break;
-            //    case Key.E:
-            //        camera.Position -= camera.Up * cameraSpeed; // Up
-            //        break;
-            //    case Key.Q:
-            //        camera.Position += camera.Up * cameraSpeed; // Up
-            //        break;
-            //}
-
 
         }
 
@@ -455,127 +419,7 @@ namespace TrbMultiTool
             }
         }
 
-        //private void OpenGLControl_OpenGLDraw(object sender, SharpGL.WPF.OpenGLRoutedEventArgs args)
-        //{
-        //    //GL.ClearColor(Color4.Blue);
-        //    //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        //}
 
-        //private void OpenGLControl_OpenGLInitialized(object sender, SharpGL.WPF.OpenGLRoutedEventArgs args)
-        //{
-
-        //    //gl = args.OpenGL;
-
-        //    //gl.Enable(OpenGL.GL_DEPTH_TEST);
-
-        //    //uint vertexShader = gl.CreateShader(OpenGL.GL_VERTEX_SHADER);
-        //    //gl.ShaderSource(vertexShader, vertexShaderSource);
-        //    //gl.CompileShader(vertexShader);
-
-        //    //int[] status = new int[1];
-        //    //gl.GetShader(vertexShader, OpenGL.GL_COMPILE_STATUS, status);
-        //    //if (status[0] == OpenGL.GL_FALSE)
-        //    //{
-        //    //    // Compile error
-        //    //    StringBuilder info = new();
-        //    //    gl.GetShaderInfoLog(vertexShader, 512, new IntPtr(), info);
-        //    //    var test = info.ToString();
-        //    //}
-
-
-
-        //    //uint fragmentShader = gl.CreateShader(OpenGL.GL_FRAGMENT_SHADER);
-        //    //gl.ShaderSource(fragmentShader, fragmentShaderSource);
-        //    //gl.CompileShader(fragmentShader);
-
-        //    //gl.GetShader(fragmentShader, OpenGL.GL_COMPILE_STATUS, status);
-        //    //if (status[0] == OpenGL.GL_FALSE)
-        //    //{
-        //    //    // Compile error
-        //    //    StringBuilder info = new();
-        //    //    gl.GetShaderInfoLog(fragmentShader, 512, new IntPtr(), info);
-        //    //    var test = info.ToString();
-        //    //}
-
-        //    //shaderProgram = gl.CreateProgram();
-        //    //gl.AttachShader(shaderProgram, vertexShader);
-        //    //gl.AttachShader(shaderProgram, fragmentShader);
-        //    //gl.LinkProgram(shaderProgram);
-
-        //    //gl.DeleteShader(vertexShader);
-        //    //gl.DeleteShader(fragmentShader);
-        //}
-
-        //private void OpenTkControl_Render(TimeSpan obj)
-        //{
-        //    //time += obj.TotalMilliseconds / 10;
-        //    //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        //    //GL.ClearColor(color);
-
-        //    //if (shader == null)
-        //    //{
-        //    //    shader = Shader.Create("yeet", "C:\\Users\\nepel\\Desktop\\Shaders\\default.vert", "C:\\Users\\nepel\\Desktop\\Shaders\\default.frag");
-        //    //}
-
-        //    //if (selected)
-        //    //{
-        //    //    shader.Use();
-
-        //    //    var model = Matrix4.Identity * Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(time));
-        //    //    shader.SetMatrix("model", model);
-        //    //    shader.SetMatrix("view", camera.GetViewMatrix());
-        //    //    shader.SetMatrix("projection", camera.GetProjectionMatrix());
-
-        //    //    GL.BindVertexArray(_vertexArrayObject);
-        //    //    GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indicesVBO.Handle);
-        //    //    GL.DrawElements(PrimitiveType.Triangles, _indicesVBO.Count, DrawElementsType.UnsignedInt, 0);
-        //    //    GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-        //    //    GL.BindVertexArray(0);
-        //    //}
-
-        //    //const float sensitivity = 0.2f;
-        //    //var point = PointToScreen(Mouse.GetPosition(this));
-
-        //    //if (firstMove) // This bool variable is initially set to true.
-        //    //{
-        //    //    lastPos = new Vector2((float)point.X, (float)point.Y);
-        //    //    firstMove = false;
-        //    //}
-        //    //else
-        //    //{
-        //    //    // Calculate the offset of the mouse position
-        //    //    var deltaX = (float)point.X - lastPos.X;
-        //    //    var deltaY = (float)point.Y - lastPos.Y;
-        //    //    lastPos = new Vector2((float)point.X, (float)point.Y);
-
-        //    //    // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
-        //    //    if (camera != null)
-        //    //    {
-        //    //        camera.Yaw += deltaX * sensitivity;
-        //    //        camera.Pitch -= deltaY * sensitivity; // Reversed since y-coordinates range from bottom to top
-        //    //    }
-
-        //    //}
-
-        //    //  Reset the modelview matrix.
-        //    //OpenTK.Graphics.OpenGL.GL.LoadIdentity();
-
-        //    //  Move the geometry into a fairly central position.
-        //    //OpenTK.Graphics.OpenGL.GL.Translate(-1.5f, 0.0f, -6.0f);
-        //}
-
-        
-
-        private void OpenTkControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            //GL.Enable(EnableCap.DepthTest);
-            //GL.ClearColor(color);
-            //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            //shader = Shader.Create("yeet", "C:\\Users\\nepel\\Desktop\\Shaders\\default.vert", "C:\\Users\\nepel\\Desktop\\Shaders\\default.frag");
-            //camera = new Camera(Vector3.UnitZ * 3, (float)OpenTkControl.RenderSize.Width / (float)OpenTkControl.RenderSize.Height);
-        }
-
-        Color4 color = Color4.FromHsv(new Vector4(1, 0.75f, 0.75f, 1));
 
     }
 }

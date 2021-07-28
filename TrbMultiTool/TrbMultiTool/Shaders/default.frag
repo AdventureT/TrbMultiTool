@@ -13,7 +13,7 @@ void main()
     
     vec3 ambient = diffuseTexture.rgb * ambient; // 0.5 is the ambient light value
 
-    vec3 lightDir = normalize(vec3(0, 0, 1)); // mess with this until you get what you want
+    vec3 lightDir = normalize(vec3(-0.2f, -1.0f, -0.3f)); // mess with this until you get what you want
 
     float diff = max(dot(Normal, lightDir), 0.0);
     vec3 diffuse = diffuse * diff * diffuseTexture.rgb;

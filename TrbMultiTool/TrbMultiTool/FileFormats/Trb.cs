@@ -305,7 +305,8 @@ namespace TrbMultiTool
                 var groupByIds = Tsfl.Symb.NameEntries.GroupBy(e => e.ID); //Group by IDs
                 foreach (var item in groupByIds)
                 {
-                    hdrx = Tsfl.Hdrx.TagInfos[item.Key].Offset;
+                    if (Tsfl.Hdrx == null) hdrx = 0;
+                    else hdrx = Tsfl.Hdrx.TagInfos[item.Key].Offset;
 
                     if (item.FirstOrDefault().Name.Contains("FileHeader") || item.FirstOrDefault().Name.Contains("Database"))
                     {
