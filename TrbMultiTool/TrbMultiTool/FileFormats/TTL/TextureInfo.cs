@@ -43,12 +43,12 @@ namespace TrbMultiTool.FileFormats.TTL
 
         public TextureInfo(uint offset)
         {
-            if (Trb._game == Game.NicktoonsUnite)
+            if (Trb._game == Game.NicktoonsUnite || Trb._game == Game.NicktoonsBattleForVolcanoIsland)
             {
                 var flags = Trb.SectFile.ReadBytes(4);
                 PixelFormat pixelformat = PixelFormat.Format8bppIndexed;
-                if (flags[0] == 4)
-                {
+                //if (flags[0] == 4)
+                //{
                     FileNameOffset = offset + Trb.SectFile.ReadUInt32();
                     FileName = ReadHelper.ReadStringFromOffset(Trb.SectFile, FileNameOffset);
                     var width = Trb.SectFile.ReadInt32();
@@ -68,28 +68,28 @@ namespace TrbMultiTool.FileFormats.TTL
                     var stream = new MemoryStream();
                     Bitmap = new(width, height, PixelFormat.Format8bppIndexed);
 
-                    //var tga = new TgaSharp.TGA((ushort)((ushort)width), (ushort)((ushort)height), TgaSharp.TgaPixelDepth.Bpp16, TgaSharp.TgaImageType.Uncompressed_ColorMapped);
+                //var tga = new TgaSharp.TGA((ushort)((ushort)width), (ushort)((ushort)height), TgaSharp.TgaPixelDepth.Bpp8, TgaSharp.TgaImageType.Uncompressed_ColorMapped);
 
-                    //tga.Header.ColorMapSpec.ColorMapEntrySize = TgaSharp.TgaColorMapEntrySize.A1R5G5B5;
-                    //tga.Header.ColorMapSpec.ColorMapLength = (ushort)((ushort)Pallete.Length / 2);
-                    //tga.Header.ColorMapType = TgaSharp.TgaColorMapType.ColorMap;
-
-
-
-                    //tga.ImageOrColorMapArea.ColorMapData = Pallete;
-                    //tga.ImageOrColorMapArea.ImageData = RawImage;
-                    //string error;
-                    //tga.CheckAndUpdateOffsets(out error);
-                    //Bitmap = tga.ToBitmap();
+                //tga.Header.ColorMapSpec.ColorMapEntrySize = TgaSharp.TgaColorMapEntrySize.;
+                //tga.Header.ColorMapSpec.ColorMapLength = (ushort)((ushort)Pallete.Length / 4);
+                //tga.Header.ColorMapType = TgaSharp.TgaColorMapType.ColorMap;
 
 
-                    //SixLabors.ImageSharp.Image.Load()
-                    int x = 0;
-                    for (int i = 0; i < paletteColorCount * bitsPerColor; i+=4)
+
+                //tga.ImageOrColorMapArea.ColorMapData = Pallete;
+                //tga.ImageOrColorMapArea.ImageData = RawImage;
+                //string error;
+                //tga.CheckAndUpdateOffsets(out error);
+                //Bitmap = tga.ToBitmap();
+
+
+                //SixLabors.ImageSharp.Image.Load()
+                int x = 0;
+                    for (int i = 0; i < paletteColorCount * bitsPerColor; i+=(int)bitsPerColor)
                     {
-                        //var test = BitConverter.ToInt32(ReadBytes(palleteStream, (int)bitsPerColor / 8));
-                        //var test2 = BitConverter.ToInt32(ReadBytes(palleteStream, (int)bitsPerColor / 8));
-                        //var test3 = BitConverter.ToInt32(ReadBytes(palleteStream, (int)bitsPerColor / 8));
+                        //var test = BitConverter.ToInt16(ReadBytes(palleteStream, (int)bitsPerColor / 4));
+                        //var test2 = BitConverter.ToInt16(ReadBytes(palleteStream, (int)bitsPerColor / 4));
+                        //var test3 = BitConverter.ToInt16(ReadBytes(palleteStream, (int)bitsPerColor / 4));
                         //var test4 = BitConverter.ToInt32(ReadBytes(palleteStream, (int)bitsPerColor / 8));
                         pal.Entries[x] = Color.FromArgb(Pallete[i], Pallete[i+1], Pallete[i + 2]);
                         x++;
@@ -108,13 +108,13 @@ namespace TrbMultiTool.FileFormats.TTL
                     //Unlock Bits
                     Bitmap.UnlockBits(bitmapData);
                     Trb.SectFile.BaseStream.Seek(4, SeekOrigin.Current);
-                }
-                else
-                {
-                    Trb.SectFile.BaseStream.Seek(40, SeekOrigin.Current);
-                    FileName = "Pixelformat not implemented";
-                }
-                
+                //}
+                //else
+                //{
+                //    //Trb.SectFile.BaseStream.Seek(40, SeekOrigin.Current);
+                //    //FileName = "Pixelformat not implemented";
+                //}
+
             }
             else
             {

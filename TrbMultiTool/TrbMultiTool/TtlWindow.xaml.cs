@@ -97,7 +97,7 @@ namespace TrbMultiTool
         private void LoadTtl(TreeViewItem tvi)
         {
             if (tvi.Tag is Ttex) { LoadTtex(tvi); return; }
-            if (Trb._game == Game.NicktoonsUnite)
+            if (Trb._game == Game.NicktoonsUnite || Trb._game == Game.NicktoonsBattleForVolcanoIsland)
             {
                 var bitmap = ((TextureInfo)tvi.Tag).Bitmap;
                 img.Source = Ttl.LoadBitmap(bitmap);
@@ -116,10 +116,21 @@ namespace TrbMultiTool
 
         private void LoadTtex(TreeViewItem tvi)
         {
-            var dds = ((Ttex)tvi.Tag).DDS;
-            img.Source = Ttl.LoadBitmap(dds.BitmapImage);
-            img.Width = dds.BitmapImage.Width;
-            img.Height = dds.BitmapImage.Height;
+            if (Trb._game == Game.NicktoonsAttackOfTheToybots)
+            {
+                var bitmap = ((Ttex)tvi.Tag).Bitmap;
+                img.Source = Ttl.LoadBitmap(bitmap);
+                img.Width = bitmap.Width;
+                img.Height = bitmap.Height;
+            }
+            else
+            {
+                var dds = ((Ttex)tvi.Tag).DDS;
+                img.Source = Ttl.LoadBitmap(dds.BitmapImage);
+                img.Width = dds.BitmapImage.Width;
+                img.Height = dds.BitmapImage.Height;
+            }
+
         }
 
         private void listView_SelectionChanged(object sender, SelectionChangedEventArgs e)

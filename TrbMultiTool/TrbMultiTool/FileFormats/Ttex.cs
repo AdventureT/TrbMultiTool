@@ -1,11 +1,12 @@
 ﻿using PrimeWPF;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TrbMultiTool.FileFormats
 {
@@ -45,29 +46,108 @@ namespace TrbMultiTool.FileFormats
 
         public short Idx { get; set; }
 
+        public Bitmap Bitmap { get; set; }
+
+        public byte[] Pallete { get; set; }
+
 
         public Ttex(uint offset, short hdrxIdx)
         {
+
             Idx = hdrxIdx;
             Unknown = Trb.SectFile.ReadUInt32();
             Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
             TextureNameOffset = Trb.SectFile.ReadUInt32();
             TextureName = ReadHelper.ReadStringFromOffset(Trb.SectFile, TextureNameOffset + offset);
             Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
-            TextureInfoOffset = Trb.SectFile.ReadUInt32();
-            DDSSize = Trb.SectFile.ReadUInt32();
-            Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
-            DDSOffset = Trb.SectFile.ReadUInt32();
-            RawImage = ReadHelper.ReadFromOffset(Trb.SectFile, DDSSize, DDSOffset + offset);
-            DDS = new DDSImage(RawImage);
-            Trb.SectFile.BaseStream.Seek(TextureInfoOffset + offset, System.IO.SeekOrigin.Begin);
-            Width = Trb.SectFile.ReadUInt32();
-            Height = Trb.SectFile.ReadUInt32();
-            MipMapCount = Trb.SectFile.ReadUInt32();
-            Width2 = Trb.SectFile.ReadUInt16();
-            Height2 = Trb.SectFile.ReadUInt16();
-            Type = Trb.SectFile.ReadUInt32();
-            Unknown = Trb.SectFile.ReadUInt32();
+            if (Trb._game == Game.NicktoonsAttackOfTheToybots)
+            {
+                var type = Trb.SectFile.ReadUInt32();
+                Width = Trb.SectFile.ReadUInt32();
+                Height = Trb.SectFile.ReadUInt32();
+                Width2 = Trb.SectFile.ReadUInt16();
+                Height2 = Trb.SectFile.ReadUInt16();
+                Trb.SectFile.BaseStream.Seek(224, SeekOrigin.Current);
+                var palleteOffset = Trb.SectFile.ReadUInt32();
+                var imageOffset = Trb.SectFile.ReadUInt32();
+                //Ttex in Toybots mostly have 1 texure per ttex
+                Pallete = ReadHelper.ReadFromOffset(Trb.SectFile, Width * 12, palleteOffset + Trb.Tsfl.Hdrx.TagInfos[1].Offset);
+                RawImage = ReadHelper.ReadFromOffset(Trb.SectFile, (Width * Height) / 4, imageOffset + Trb.Tsfl.Hdrx.TagInfos[1].Offset);
+                Bitmap = new((int)Width/2, (int)Height/2, PixelFormat.Format8bppIndexed);
+
+                //byte[] converted = new byte[RawImage.Length * 8 * 2];
+                //int x = 0;
+                //for (int i = 0; i < RawImage.Length; i++)
+                //{
+                //    var ind = (RawImage[i] & 0xFF) * 8;
+                //    for (int g = 0; g < 8; g++)
+                //    {
+                //        converted[x] = Pallete[ind++];
+                //        x++;
+                //    }
+                //    var ind2 = (RawImage[i] >> 4) * 8;
+                //    for (int g = 0; g < 8; g++)
+                //    {
+                //        converted[x] = Pallete[ind2++];
+                //        x++;
+                //    }
+                //    //var ind = RawImage[i] * 8;
+                //    //for (int g = 0; g < 8; g++)
+                //    //{
+                //    //    converted[x] = Pallete[ind++];
+                //    //    x++;
+                //    //}
+                //}
+                //BinaryWriter br = new(File.Create("C:\\Users\\Leon\\Desktop\\testi.fl"));
+                //br.Write(converted);
+                //br.Close();
+
+
+                ColorPalette pal = Bitmap.Palette;
+                int x = 0;
+                for (int i = 0; i < Width * 12; i += 12)
+                {
+                    //byte[] test = new byte[] { Pallete[i], Pallete[i + 1] };
+                    //byte[] test2 = new byte[] { Pallete[i + 2], Pallete[i + 3] };
+                    //byte[] test3 = new byte[] { Pallete[i + 4], Pallete[i + 5] };
+                    //pal.Entries[x] = Color.FromArgb(BitConverter.ToUInt16(test) >> 8, BitConverter.ToUInt16(test2) >> 8, BitConverter.ToUInt16(test3) >> 8);
+                    pal.Entries[x] = Color.FromArgb(Pallete[i], Pallete[i+1], Pallete[i+2]);
+
+                    x++;
+                }
+                Bitmap.Palette = pal;
+
+                //Lock Bits with white image
+                var BoundsRect = new Rectangle(0, 0, (int)Width/2, (int)Width/2);
+                BitmapData bitmapData = Bitmap.LockBits(BoundsRect,
+                                                ImageLockMode.WriteOnly,
+                                                Bitmap.PixelFormat);
+                //Copy PixelData into bitmapData
+                IntPtr pointer = bitmapData.Scan0;
+                Marshal.Copy(RawImage, 0, pointer, RawImage.Length);
+
+                //Unlock Bits
+                Bitmap.UnlockBits(bitmapData);
+
+            }
+            else
+            {
+                TextureInfoOffset = Trb.SectFile.ReadUInt32();
+                DDSSize = Trb.SectFile.ReadUInt32();
+                Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
+                DDSOffset = Trb.SectFile.ReadUInt32();
+                RawImage = ReadHelper.ReadFromOffset(Trb.SectFile, DDSSize, DDSOffset + offset);
+                DDS = new DDSImage(RawImage);
+                Trb.SectFile.BaseStream.Seek(TextureInfoOffset + offset, System.IO.SeekOrigin.Begin);
+                Width = Trb.SectFile.ReadUInt32();
+                Height = Trb.SectFile.ReadUInt32();
+                MipMapCount = Trb.SectFile.ReadUInt32();
+                Width2 = Trb.SectFile.ReadUInt16();
+                Height2 = Trb.SectFile.ReadUInt16();
+                Type = Trb.SectFile.ReadUInt32();
+                Unknown = Trb.SectFile.ReadUInt32();
+            }
+
         }
 
         public static ulong ResourceNameHash(string resourceName)
@@ -198,7 +278,7 @@ namespace TrbMultiTool.FileFormats
             var dds = new BinaryReader(File.Open(path, FileMode.Open));
             var fileName = Path.GetFileNameWithoutExtension(path) + ".tga";
             var sect = new MemoryStream();
-            
+
             sect.Write(BitConverter.GetBytes(0));
             sect.Write(BitConverter.GetBytes(0x30));
             sect.Write(BitConverter.GetBytes(0x0));
@@ -211,7 +291,7 @@ namespace TrbMultiTool.FileFormats
             sect.Write(BitConverter.GetBytes(1));
             sect.Write(BitConverter.GetBytes(0x14));
             sect.Write(BitConverter.GetBytes(0));
-            sect.Write(GetStringBytes(fileName+'\0'));
+            sect.Write(GetStringBytes(fileName + '\0'));
 
             var BytesToSkip = 4 - ((fileName.Length + 1) % 4);
 
