@@ -181,7 +181,7 @@ namespace TrbMultiTool.FileFormats
                     Trb.SectFile.BaseStream.Seek(info.Offset, SeekOrigin.Begin);
                     uint stringOffset = Trb.SectFile.ReadUInt32();
                     Trb.SectFile.BaseStream.Seek(stringOffset, SeekOrigin.Begin);
-                    string text = ReadHelper.ReadUnicodeString(Trb.SectFile);
+                    string text = Trb.SectFile.ReadUnicodeString();
 
                     ListViewItem item = new ListViewItem
                     {

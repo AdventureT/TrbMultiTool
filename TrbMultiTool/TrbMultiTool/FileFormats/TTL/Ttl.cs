@@ -131,7 +131,7 @@ namespace TrbMultiTool.FileFormats
                 TextureInfos.Add(new TextureInfo(Offset));
             }
             Trb.SectFile.BaseStream.Seek(pos + 4, System.IO.SeekOrigin.Begin);
-            TtlType = ReadHelper.ReadStringFromOffset(Trb.SectFile, Offset + Trb.SectFile.ReadUInt32());
+            TtlType = Trb.SectFile.ReadStringFromOffset(Offset + Trb.SectFile.ReadUInt32());
             //var TTLWindow = new TtlWindow(this);
             //TTLWindow.Show();
         }

@@ -52,13 +52,13 @@ namespace TrbMultiTool.FileFormats
             Unknown = Trb.SectFile.ReadUInt32();
             Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
             TextureNameOffset = Trb.SectFile.ReadUInt32();
-            TextureName = ReadHelper.ReadStringFromOffset(Trb.SectFile, TextureNameOffset + offset);
+            TextureName = Trb.SectFile.ReadStringFromOffset(TextureNameOffset + offset);
             Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
             TextureInfoOffset = Trb.SectFile.ReadUInt32();
             DDSSize = Trb.SectFile.ReadUInt32();
             Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
             DDSOffset = Trb.SectFile.ReadUInt32();
-            RawImage = ReadHelper.ReadFromOffset(Trb.SectFile, DDSSize, DDSOffset + offset);
+            RawImage = Trb.SectFile.ReadFromOffset(DDSSize, DDSOffset + offset);
             DDS = new DDSImage(RawImage);
             Trb.SectFile.BaseStream.Seek(TextureInfoOffset + offset, System.IO.SeekOrigin.Begin);
             Width = Trb.SectFile.ReadUInt32();

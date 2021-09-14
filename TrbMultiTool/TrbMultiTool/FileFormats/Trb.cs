@@ -12,8 +12,8 @@ namespace TrbMultiTool
     {
         public static string _safeFileName;
         public static Game _game;
-        public static BinaryReader _f;
-        public static BinaryReader SectFile;
+        public static EndiannessAwareBinaryReader _f;
+        public static EndiannessAwareBinaryReader SectFile;
         public static string _fileName;
         public bool finishedLoading = false;
 
@@ -127,7 +127,7 @@ namespace TrbMultiTool
             binaryWriter.Write((uint)hdrx.Length); // Size of HDRX
             binaryWriter.Write(hdrx.ToArray());
 
-            BinaryReader binaryReader = new(File.Open(_fileName, FileMode.Open));
+            EndiannessAwareBinaryReader binaryReader = new(File.Open(_fileName, FileMode.Open));
             binaryReader.BaseStream.Seek(0x10, SeekOrigin.Begin); //Seek to hdrx size
             binaryReader.BaseStream.Seek(binaryReader.ReadUInt32()+4, SeekOrigin.Current); //skip hdrx size and to sect size
             var oldSectSize = binaryReader.ReadUInt32();
@@ -293,9 +293,9 @@ namespace TrbMultiTool
             _safeFileName = fileName.Split("\\").Last();
             _game = game;
 
-            _f = new BinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
+            _f = new EndiannessAwareBinaryReader(File.Open(_fileName, FileMode.Open, FileAccess.Read));
             Tsfl = new Tsfl();
-            SectFile = new BinaryReader(new MemoryStream(Tsfl.Sect.Data.ToArray()));
+            SectFile = new EndiannessAwareBinaryReader(new MemoryStream(Tsfl.Sect.Data.ToArray()), _f._endianness);
             uint hdrx = 0;
 
             if (!onlyExtract)
@@ -362,7 +362,7 @@ namespace TrbMultiTool
                 byte[] originalFileData = File.ReadAllBytes(_fileName);
                 MemoryStream originalFileStream = new MemoryStream(originalFileData);
 
-                _f = new BinaryReader(originalFileStream);
+                _f = new EndiannessAwareBinaryReader(originalFileStream);
 
                 Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
                 dlg.FileName = _safeFileName;

@@ -64,7 +64,7 @@ namespace TrbMultiTool.FileFormats
             foreach (var info in infos)
             {
                 Trb.SectFile.BaseStream.Seek(info.Offset1, System.IO.SeekOrigin.Begin);
-                string name = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32());
+                string name = Trb.SectFile.ReadStringFromOffset(Trb.SectFile.ReadUInt32());
 
                 var tvi = new TreeViewItem
                 {
@@ -89,7 +89,7 @@ namespace TrbMultiTool.FileFormats
                     //Player
                     Type.Player => Player(ref tvi),
                     //string
-                    Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(Trb.SectFile, textOffset), textOffset, Trb.SectFile.BaseStream.Position - 4),
+                    Type.String => new TypeContent(Type.String, Trb.SectFile.ReadStringFromOffset(textOffset), textOffset, Trb.SectFile.BaseStream.Position - 4),
                     //Uint
                     Type.UInt => new TypeContent(Type.UInt, Trb.SectFile.ReadUInt32().ToString(), Trb.SectFile.BaseStream.Position - 4),
                     _ => $"Type {subInfo.Type} hasn't been implemented yet",
@@ -133,14 +133,14 @@ namespace TrbMultiTool.FileFormats
                     Header = playerSubInfo.Type switch
                     {
                         //string
-                        Type.String => ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value),
+                        Type.String => Trb.SectFile.ReadStringFromOffset(playerSubInfo.Value),
                         Type.Int => playerSubInfo.Value,
                         _ => $"Type {playerSubInfo.Type} hasn't been implemented yet",
                     },
                     Tag = playerSubInfo.Type switch
                     {
                         //string
-                        Type.String => new TypeContent(Type.String, ReadHelper.ReadStringFromOffset(Trb.SectFile, playerSubInfo.Value), playerSubInfo.Value, playerSubInfo.ValuePointer),
+                        Type.String => new TypeContent(Type.String, Trb.SectFile.ReadStringFromOffset(playerSubInfo.Value), playerSubInfo.Value, playerSubInfo.ValuePointer),
                         Type.Int => new TypeContent(Type.Int, playerSubInfo.Value.ToString(), playerSubInfo.ValuePointer),
                         _ => new TypeContent(Type.String, $"Type {playerSubInfo.Type} hasn't been implemented yet", 0, 0) ,
                     }

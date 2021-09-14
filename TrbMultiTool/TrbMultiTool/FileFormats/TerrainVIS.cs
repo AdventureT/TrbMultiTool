@@ -68,13 +68,13 @@ namespace TrbMultiTool.FileFormats
             public uint unk2;
             public string file;
 
-            public MatLibInfo(BinaryReader sectFile)
+            public MatLibInfo(EndiannessAwareBinaryReader sectFile)
             {
                 fileOffset = sectFile.ReadUInt32();
                 unk1 = sectFile.ReadUInt32();
                 unk2 = sectFile.ReadUInt32();
 
-                file = ReadHelper.ReadStringFromOffset(sectFile, fileOffset);
+                file = sectFile.ReadStringFromOffset(fileOffset);
             }
         }
 
@@ -111,19 +111,19 @@ namespace TrbMultiTool.FileFormats
             sectFile.BaseStream.Seek(tpInfo.L0ModFilePointer, SeekOrigin.Begin);
             for (int i = 0; i < tpInfo.countOfL0Mods; i++)
             {
-                string model = ReadHelper.ReadStringFromOffset(sectFile, sectFile.ReadUInt32());
+                string model = sectFile.ReadStringFromOffset(sectFile.ReadUInt32());
                 tpInfo.L0Models.Add(model);
             }
 
             sectFile.BaseStream.Seek(tpInfo.L1ModFilePointer, SeekOrigin.Begin);
             for (int i = 0; i < tpInfo.countOfL1Mods; i++)
             {
-                string model = ReadHelper.ReadStringFromOffset(sectFile, sectFile.ReadUInt32());
+                string model = sectFile.ReadStringFromOffset(sectFile.ReadUInt32());
                 tpInfo.L1Models.Add(model);
             }
 
-            tpInfo.name = ReadHelper.ReadStringFromOffset(sectFile, tpInfo.nameOffset);
-            tpInfo.collisionFile = ReadHelper.ReadStringFromOffset(sectFile, tpInfo.collisionFileOffset);
+            tpInfo.name = sectFile.ReadStringFromOffset(tpInfo.nameOffset);
+            tpInfo.collisionFile = sectFile.ReadStringFromOffset(tpInfo.collisionFileOffset);
             sectFile.BaseStream.Seek(structEnd, SeekOrigin.Begin);
 
             return tpInfo;
@@ -136,9 +136,9 @@ namespace TrbMultiTool.FileFormats
                 var sectFile = Trb.SectFile;
 
                 UsedFiles files = new UsedFiles(
-                    ReadHelper.ReadStringFromOffset(sectFile, sectFile.ReadUInt32()),
-                    ReadHelper.ReadStringFromOffset(sectFile, sectFile.ReadUInt32()),
-                    ReadHelper.ReadStringFromOffset(sectFile, sectFile.ReadUInt32())
+                    sectFile.ReadStringFromOffset(sectFile.ReadUInt32()),
+                    sectFile.ReadStringFromOffset(sectFile.ReadUInt32()),
+                    sectFile.ReadStringFromOffset(sectFile.ReadUInt32())
                 );
 
                 var unk1 = sectFile.ReadUInt32(); // it's zero in envmain.trb

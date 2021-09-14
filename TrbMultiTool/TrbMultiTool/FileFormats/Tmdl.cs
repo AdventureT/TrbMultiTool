@@ -83,8 +83,8 @@ namespace TrbMultiTool.FileFormats
 
                     Trb.SectFile.BaseStream.Seek(materialOffset, SeekOrigin.Begin);
 
-                    var matName = ReadHelper.ReadString(Trb.SectFile);
-                    var texName = ReadHelper.ReadStringFromOffset(Trb.SectFile, materialOffset + 0x68).Replace(".tga", ".dds");
+                    var matName = Trb.SectFile.ReadString();
+                    var texName = Trb.SectFile.ReadStringFromOffset(materialOffset + 0x68).Replace(".tga", ".dds");
 
                     MaterialsList.Add(new TMaterial(matName, texName, Scene.Materials.Count));
 
@@ -172,7 +172,7 @@ namespace TrbMultiTool.FileFormats
                 uint vertexCount = Trb.SectFile.ReadUInt32();
                 uint vertexCount2 = Trb.SectFile.ReadUInt32();
                 uint matNameOffset = Trb.SectFile.ReadUInt32();
-                string matName = ReadHelper.ReadStringFromOffset(Trb.SectFile, matNameOffset + hdrx);
+                string matName = Trb.SectFile.ReadStringFromOffset(matNameOffset + hdrx);
                 uint vertexesOffset = Trb.SectFile.ReadUInt32();
                 uint facesOffset = Trb.SectFile.ReadUInt32();
 
@@ -247,7 +247,7 @@ namespace TrbMultiTool.FileFormats
         private void CreateModelDeBlob(uint hdrx, Symb.NameEntry meshEntry)
         {
             Trb.SectFile.BaseStream.Seek(meshEntry.DataOffset + hdrx, System.IO.SeekOrigin.Begin);
-            var modelFileNameOffset = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + hdrx);
+            var modelFileNameOffset = Trb.SectFile.ReadStringFromOffset(Trb.SectFile.ReadUInt32() + hdrx);
             TmdlName = modelFileNameOffset;  
             var modelCount = Trb.SectFile.ReadUInt32();
             var unknown = Trb.SectFile.ReadSingle();
@@ -276,7 +276,7 @@ namespace TrbMultiTool.FileFormats
                 var one = Trb.SectFile.ReadUInt32();
                 unknown1 = Trb.SectFile.ReadUInt32();
                 var unknown2 = Trb.SectFile.ReadUInt32();
-                var meshName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + hdrx);
+                var meshName = Trb.SectFile.ReadStringFromOffset(Trb.SectFile.ReadUInt32() + hdrx);
                 var meshSubInfoOffset = Trb.SectFile.ReadUInt32();
                 Debug.WriteLine(meshName);
                 Mesh mesh = new(meshName, PrimitiveType.Triangle);
@@ -316,7 +316,7 @@ namespace TrbMultiTool.FileFormats
             uint lod_meshInfoCount = Trb.SectFile.ReadUInt32(); //??
             uint faceCount = Trb.SectFile.ReadUInt32();
             uint vertexCount = Trb.SectFile.ReadUInt32();
-            string matName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + (uint)hdrx);
+            string matName = Trb.SectFile.ReadStringFromOffset(Trb.SectFile.ReadUInt32() + (uint)hdrx);
             uint lodSubMeshInfoOffset = Trb.SectFile.ReadUInt32();
             Trb.SectFile.BaseStream.Seek(lodSubMeshInfoOffset + hdrx, System.IO.SeekOrigin.Begin);
             var meshInfos = new List<LOD_MeshInfo>();

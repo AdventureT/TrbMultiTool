@@ -15,12 +15,12 @@ namespace TrbMultiTool.FileFormats
             var unk = Trb.SectFile.ReadUInt32();
             var unk2 = Trb.SectFile.ReadUInt32();
             var unkOffset = Trb.SectFile.ReadUInt32();
-            MeshName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + hdrx);
+            MeshName = Trb.SectFile.ReadStringFromOffset(Trb.SectFile.ReadUInt32() + hdrx);
             var count = Trb.SectFile.ReadUInt32();
             var offset = Trb.SectFile.ReadUInt32();
             Trb.SectFile.BaseStream.Seek(offset + hdrx, System.IO.SeekOrigin.Begin);
             unk = Trb.SectFile.ReadUInt32();
-            TextureName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + hdrx);
+            TextureName = Trb.SectFile.ReadStringFromOffset(Trb.SectFile.ReadUInt32() + hdrx);
         }
     }
 }

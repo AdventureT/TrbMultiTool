@@ -33,7 +33,7 @@ namespace TrbMultiTool.FileFormats
             {
                 XuiOffset = xuiOffset;
                 Unk = Trb.SectFile.ReadInt32();
-                FileName = ReadHelper.ReadStringFromOffset(Trb.SectFile, Trb.SectFile.ReadUInt32() + hdrx);
+                FileName = Trb.SectFile.ReadStringFromOffset(Trb.SectFile.ReadUInt32() + hdrx);
                 XUIFileOffset = Trb.SectFile.ReadUInt32();
                 Trb.SectFile.BaseStream.Seek(xuiOffset, SeekOrigin.Begin);
                 var name = Encoding.Default.GetString(Trb.SectFile.ReadBytes(3));
@@ -43,16 +43,17 @@ namespace TrbMultiTool.FileFormats
                     MessageBox.Show("Contact me and send me your file, Discord: AdventureT#5879");
                     return;
                 }
-                var unknown1 = ReadHelper.ReadUInt32B(Trb.SectFile);
-                var unknown2 = ReadHelper.ReadUInt32B(Trb.SectFile);
-                var unknown3 = ReadHelper.ReadUInt16B(Trb.SectFile);
-                var unknown4 = ReadHelper.ReadUInt16B(Trb.SectFile);
-                var xuibSize = ReadHelper.ReadUInt16B(Trb.SectFile);
-                var subLabelCount = ReadHelper.ReadUInt16B(Trb.SectFile);
+                Trb.SectFile._endianness = EndiannessAwareBinaryReader.Endianness.Big;
+                var unknown1 = Trb.SectFile.ReadUInt32();
+                var unknown2 = Trb.SectFile.ReadUInt32();
+                var unknown3 = Trb.SectFile.ReadUInt32();
+                var unknown4 = Trb.SectFile.ReadUInt32();
+                var xuibSize = Trb.SectFile.ReadUInt32();
+                var subLabelCount = Trb.SectFile.ReadUInt16();
                 if (unknown2 != 0) Trb.SectFile.BaseStream.Seek(40, SeekOrigin.Current);
                 for (int i = 0; i < subLabelCount; i++)
                 {
-                    Sections.Add(new(Encoding.Default.GetString(Trb.SectFile.ReadBytes(4)), ReadHelper.ReadUInt32B(Trb.SectFile), ReadHelper.ReadUInt32B(Trb.SectFile)));
+                    Sections.Add(new(Encoding.Default.GetString(Trb.SectFile.ReadBytes(4)), Trb.SectFile.ReadUInt32(), Trb.SectFile.ReadUInt32()));
                 }
                 foreach (var item in Sections)
                 {
@@ -70,6 +71,7 @@ namespace TrbMultiTool.FileFormats
                             break;
                     }
                 }
+                Trb.SectFile._endianness = EndiannessAwareBinaryReader.Endianness.Little;
             });
         }
 
@@ -77,8 +79,8 @@ namespace TrbMultiTool.FileFormats
         {
             do
             {
-                var count = ReadHelper.ReadUInt16B(Trb.SectFile);
-                Strings.Add(ReadHelper.ReadUnicodeStringB(Trb.SectFile, count));
+                var count = Trb.SectFile.ReadInt16();
+                Strings.Add(Trb.SectFile.ReadUnicodeString((uint)count));
                 
             } while (sec.DataSize > Trb.SectFile.BaseStream.Position - XuiOffset - sec.DataOffset);
         }
