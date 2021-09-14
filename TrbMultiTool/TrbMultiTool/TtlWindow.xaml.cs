@@ -411,10 +411,12 @@ namespace TrbMultiTool
 
         private void LoadTtex(TreeViewItem tvi)
         {
-            //var dds = ((Ttex)tvi.Tag).DDS;
-            //img.Source = Ttl.LoadBitmap(dds.BitmapImage);
-            //img.Width = dds.BitmapImage.Width;
-            //img.Height = dds.BitmapImage.Height;
+            var dds = ((Ttex)tvi.Tag).DDS;
+            img.Source = Ttl.LoadBitmap(dds.BitmapImage);
+            img.Width = dds.BitmapImage.Width;
+            img.Height = dds.BitmapImage.Height;
+        }
+
         }
 
         private void listView_SelectionChanged(object sender, SelectionChangedEventArgs e)

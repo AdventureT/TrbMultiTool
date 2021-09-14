@@ -25,7 +25,6 @@ namespace TrbMultiTool.FileFormats
             int read_count;
             int remaining = (int)UncompressedSize;
             int dst_pos;
-
             while (remaining > 0)
             {
                 read_count = GetReadCount(file_pos, ref read_dst, ref size, ref offset);

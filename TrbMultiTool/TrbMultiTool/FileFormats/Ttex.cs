@@ -1,11 +1,12 @@
 ﻿using PrimeWPF;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TrbMultiTool.FileFormats
 {
@@ -45,9 +46,14 @@ namespace TrbMultiTool.FileFormats
 
         public short Idx { get; set; }
 
+        public Bitmap Bitmap { get; set; }
+
+        public byte[] Pallete { get; set; }
+
 
         public Ttex(uint offset, short hdrxIdx)
         {
+
             Idx = hdrxIdx;
             Unknown = Trb.SectFile.ReadUInt32();
             Offsets.Add((uint)Trb.SectFile.BaseStream.Position - offset);
@@ -68,6 +74,8 @@ namespace TrbMultiTool.FileFormats
             Height2 = Trb.SectFile.ReadUInt16();
             Type = Trb.SectFile.ReadUInt32();
             Unknown = Trb.SectFile.ReadUInt32();
+        }
+
         }
 
         public static ulong ResourceNameHash(string resourceName)
@@ -198,7 +206,7 @@ namespace TrbMultiTool.FileFormats
             var dds = new BinaryReader(File.Open(path, FileMode.Open));
             var fileName = Path.GetFileNameWithoutExtension(path) + ".tga";
             var sect = new MemoryStream();
-            
+
             sect.Write(BitConverter.GetBytes(0));
             sect.Write(BitConverter.GetBytes(0x30));
             sect.Write(BitConverter.GetBytes(0x0));
@@ -211,7 +219,7 @@ namespace TrbMultiTool.FileFormats
             sect.Write(BitConverter.GetBytes(1));
             sect.Write(BitConverter.GetBytes(0x14));
             sect.Write(BitConverter.GetBytes(0));
-            sect.Write(GetStringBytes(fileName+'\0'));
+            sect.Write(GetStringBytes(fileName + '\0'));
 
             var BytesToSkip = 4 - ((fileName.Length + 1) % 4);
 

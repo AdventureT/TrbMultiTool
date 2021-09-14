@@ -76,7 +76,7 @@ namespace TrbMultiTool.FileFormats.TTL
 
         public TextureInfo(uint offset)
         {
-            if (Trb._game == Game.NicktoonsUnite)
+            if (Trb._game == Game.NicktoonsUnite || Trb._game == Game.NicktoonsBattleForVolcanoIsland)
             {
                 var flags = Trb.SectFile.ReadBytes(4);
                 textureFormat = (TextureFormat)flags[0];
