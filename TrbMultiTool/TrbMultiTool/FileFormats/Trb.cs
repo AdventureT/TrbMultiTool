@@ -319,7 +319,7 @@ namespace TrbMultiTool
                         var Ttl = new Ttl(item.FirstOrDefault().DataOffset + hdrx, item.FirstOrDefault().Name, item.FirstOrDefault().ID);
                         ttls.Add(Ttl);
                     }
-                    else if (item.FirstOrDefault().Name.Contains("Main"))
+                    else if (item.FirstOrDefault().Name.StartsWith("Main"))
                     {
                         _f.BaseStream.Seek(item.FirstOrDefault().DataOffset, SeekOrigin.Begin);
                         var Quest = new PProperty();
@@ -338,6 +338,11 @@ namespace TrbMultiTool
                     {
                         SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
                         var LocaleStrings = new LocaleStrings();
+                    }
+                    else if (item.FirstOrDefault().Name.Contains("EntitiesMain"))
+                    {
+                        SectFile.BaseStream.Seek(item.FirstOrDefault().DataOffset + hdrx, SeekOrigin.Begin);
+                        var entities = new Entities();
                     }
                     else if (item.FirstOrDefault().Name.Contains("txui"))
                     {

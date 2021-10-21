@@ -76,7 +76,6 @@ namespace TrbMultiTool.FileFormats
             Unknown = Trb.SectFile.ReadUInt32();
         }
 
-        }
 
         public static ulong ResourceNameHash(string resourceName)
         {
