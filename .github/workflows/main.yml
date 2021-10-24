@@ -41,7 +41,7 @@ jobs:
           prerelease: false
           automatic_release_tag: "latest"
           files: |
-            ${{ env.PROJECT_PATH }}
+            ${{ env.PROJECT_PATH }}*
       
       #- name: Create Github Release
       #  id: create-new-release
