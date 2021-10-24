@@ -32,6 +32,15 @@ jobs:
 
       - name: Publish app 📰
         run: dotnet publish ${{ env.PROJECT_PATH }} -c Release
+        
+      - name: Create Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          automatic_release_tag: "latest"
+          files: |
+            ${{ env.PROJECT_PATH }}
       
       #- name: Create Github Release
       #  id: create-new-release
