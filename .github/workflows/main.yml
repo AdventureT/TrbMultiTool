@@ -41,7 +41,7 @@ jobs:
           prerelease: false
           automatic_release_tag: "latest"
           files: |
-            ${{ env.PROJECT_PATH }}*
+            D:\a\TrbMultiTool\TrbMultiTool\TrbMultiTool\TrbMultiTool\bin\Release\net5.0-windows\publish\*
       
       #- name: Create Github Release
       #  id: create-new-release
